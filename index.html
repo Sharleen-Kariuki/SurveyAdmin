@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Admin Side of the Survey Application.">
+    <title>Admin Dashboard - Survey Management System</title>
+
+    <!-- Preview card -->
+    <meta property="og:title" content="Admin Survey.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="">
+    <meta property="og:image" content=""> 
+
+    <!--Specific Dimensions for fast rendring-->
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <!-- Link to Stylesheet -->
+     <link rel="stylesheet" href="./index.css">
+
+
+</head>
+<body>
+    <main class="container">
+      <section aria-labelledby="heroTitle">
+        <div class="section-text">
+          <h1 id="heroTitle">Admin Survey</h1>
+          <p>Welcome to the Admin Side. Manage surveys, view responses, and analyze data.</p>
+        </div>
+        <div>
+          <button type="button" id="createSurveyBtn" class="btn-primary">+ Create Survey</button>
+        </div>
+      </section>
+  
+      <table>
+        <caption>LIST OF SURVEYS</caption>
+        <thead>
+          <tr>
+            <th scope="col">Title</th>
+            <th scope="col">Description</th>
+            <th scope="col">Responses</th>
+            <th scope="col">Status</th>
+            <th scope="col">Created_at</th>
+            <th scope="col">Updated_at</th>
+            <th scope="col" class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="surveyTableBody">
+          <!-- Rendered dynamically -->
+        </tbody>
+      </table>
+
+      <!-- Table Pagination Controls -->
+      <nav class="pagination-container" aria-label="Surveys table pagination">
+        <span class="pagination-info" id="paginationInfo">Showing 0 of 0</span>
+        
+        <div class="pagination-buttons">
+          <button type="button" class="btn-page" id="firstPageBtn" aria-label="First page">&laquo;</button>
+          <button type="button" class="btn-page" id="prevPageBtn" aria-label="Previous page">&lsaquo;</button>
+          
+          <span class="current-page-badge" id="currentPageBadge">1 / 1</span>
+          
+          <button type="button" class="btn-page" id="nextPageBtn" aria-label="Next page">&rsaquo;</button>
+          <button type="button" class="btn-page" id="lastPageBtn" aria-label="Last page">&raquo;</button>
+        </div>
+      </nav>
+    </main>
+  
+    <!-- Shared Modal: Create & Edit Form -->
+    <dialog id="surveyFormDialog" class="modal-dialog">
+      <form id="surveyForm" method="dialog">
+        <div class="dialog-header">
+          <h2 id="formDialogTitle">Create Survey</h2>
+          <button type="button" class="btn-close" data-close-dialog aria-label="Close">&times;</button>
+        </div>
+  
+        <input type="hidden" id="surveyId" name="id" />
+  
+        <div class="form-group">
+          <label for="surveyTitle">Title</label>
+          <input type="text" id="surveyTitle" name="title" required />
+        </div>
+  
+        <div class="form-group">
+          <label for="surveyDesc">Description</label>
+          <textarea id="surveyDesc" name="description" rows="3" required></textarea>
+        </div>
+  
+        <div class="form-group">
+          <label for="surveyStatus">Status</label>
+          <select id="surveyStatus" name="status">
+            <option value="Active">Active</option>
+            <option value="Pending">Pending</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+  
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" data-close-dialog>Cancel</button>
+          <button type="submit" class="btn-primary" id="saveSurveyBtn">Save</button>
+        </div>
+      </form>
+    </dialog>
+  
+    <!-- Delete Confirmation Dialog -->
+    <dialog id="confirmDeleteDialog" class="modal-dialog">
+      <div class="dialog-header">
+        <h2>Confirm Delete</h2>
+        <button type="button" class="btn-close" data-close-dialog aria-label="Close">&times;</button>
+      </div>
+      <p>Are you sure you want to delete <strong id="deleteSurveyName"></strong>? This action cannot be undone.</p>
+      <div class="dialog-footer">
+        <button type="button" class="btn-secondary" data-close-dialog>Cancel</button>
+        <button type="button" class="btn-danger" id="confirmDeleteBtn">Delete</button>
+      </div>
+    </dialog>
+
+
+      <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Create a new survey - Admin Survey Platform">
+  <title>Create Survey - Admin Survey</title>
+  <link rel="stylesheet" href="./index.css">
+</head>
+<body>
+  <main class="container" style="max-width: 640px;">
+    <section aria-labelledby="createHeading" style="margin-bottom: 24px;">
+      <div class="section-text">
+        <a href="index.html" class="survey-link">&larr; Back to Surveys</a>
+        <h1 id="createHeading">Create New Survey</h1>
+        <p>Set up survey details, then proceed to configure questions.</p>
+      </div>
+    </section>
+
+    <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; box-shadow: var(--shadow-sm);">
+      <form id="standaloneCreateForm">
+        <div class="form-group">
+          <label for="surveyTitle">Survey Title</label>
+          <input type="text" id="surveyTitle" name="title" required placeholder="e.g. Employee Engagement Q3" />
+        </div>
+
+        <div class="form-group">
+          <label for="surveyDesc">Description</label>
+          <textarea id="surveyDesc" name="description" rows="3" required placeholder="Brief description of the survey purpose..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="surveyStatus">Status</label>
+          <select id="surveyStatus" name="status">
+            <option value="Active">Active</option>
+            <option value="Pending">Pending</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border);">
+          <a href="index.html" class="btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center;">Cancel</a>
+          <button type="submit" id="saveAndQuestionsBtn" class="btn-primary">Save &amp; Add Questions &rarr;</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script type="module">
+    import { saveOrUpdateSurvey } from './js/storage.js';
+
+    const form = document.getElementById('standaloneCreateForm');
+    const titleInput = document.getElementById('surveyTitle');
+    const descInput = document.getElementById('surveyDesc');
+    const statusInput = document.getElementById('surveyStatus');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = titleInput.value.trim();
+      const description = descInput.value.trim();
+      const status = statusInput.value;
+
+      if (!title || !description) return;
+
+      const newId = saveOrUpdateSurvey({
+        title,
+        description,
+        status
+      });
+
+      window.location.href = `questions.html?id=${encodeURIComponent(newId)}`;
+    });
+  </script>
+</body>
+</html>

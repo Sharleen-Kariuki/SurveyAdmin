@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Admin Side of the Survey Application - Manage Questions.">
+  <title>Manage Survey Questions</title>
+
+  <!-- Preview card -->
+  <meta property="og:title" content="Manage Survey Questions">
+  <meta property="og:type" content="website">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Link to Stylesheet -->
+  <link rel="stylesheet" href="./index.css">
+</head>
+
+<body>
+  <main class="container">
+    <section aria-labelledby="surveyTitleHeading">
+      <div class="section-text">
+        <a href="index.html" class="survey-link">&larr; Back to Surveys</a>
+        <h1 id="surveyTitleHeading">Survey Questions</h1>
+        <p id="surveyDescriptionText">Loading survey...</p>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <button type="button" id="previewSurveyBtn" class="btn-secondary">Preview Survey</button>
+        <button type="button" id="createQuestionBtn" class="btn-primary">+ Add Question</button>
+      </div>
+    </section>
+
+    <!-- Questions Table -->
+    <table>
+      <caption>LIST OF QUESTIONS</caption>
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Question Text</th>
+          <th scope="col">Type</th>
+          <th scope="col">Required</th>
+          <th scope="col" class="text-right">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody id="questionsTableBody">
+        <!-- Rendered dynamically -->
+      </tbody>
+    </table>
+
+    <!-- Table Pagination Controls -->
+    <nav class="pagination-container" aria-label="Questions table pagination">
+      <span class="pagination-info" id="paginationInfo">Showing 0 of 0</span>
+
+      <div class="pagination-buttons">
+        <button type="button" class="btn-page" id="firstPageBtn" aria-label="First page">&laquo;</button>
+        <button type="button" class="btn-page" id="prevPageBtn" aria-label="Previous page">&lsaquo;</button>
+
+        <span class="current-page-badge" id="currentPageBadge">1 / 1</span>
+
+        <button type="button" class="btn-page" id="nextPageBtn" aria-label="Next page">&rsaquo;</button>
+        <button type="button" class="btn-page" id="lastPageBtn" aria-label="Last page">&raquo;</button>
+      </div>
+    </nav>
+  </main>
+
+  <!-- Question Create/Edit Dialog -->
+  <dialog id="questionFormDialog" class="modal-dialog">
+    <form id="questionForm">
+      <div class="dialog-header">
+        <h2 id="questionDialogTitle">Add Question</h2>
+        <button type="button" class="btn-close" data-close-dialog aria-label="Close">&times;</button>
+      </div>
+
+      <input type="hidden" id="questionId" />
+
+      <div class="form-group">
+        <label for="questionText">Question Text</label>
+        <input type="text" id="questionText" required placeholder="e.g., How satisfied are you with our service?" />
+      </div>
+
+      <!-- Question Input Type -->
+      <div class="form-group">
+        <label for="questionType">Response Type</label>
+        <select id="questionType" name="type">
+          <optgroup label="Text Inputs">
+            <option value="text">Short Text</option>
+            <option value="textarea">Long Text (Paragraph)</option>
+            <option value="email">Email Address</option>
+            <option value="number">Number</option>
+            <option value="date">Date</option>
+          </optgroup>
+          <optgroup label="Choice Inputs">
+            <option value="radio">Single Choice (Radio)</option>
+            <option value="checkbox">Multiple Choice (Checkboxes)</option>
+            <option value="select">Dropdown Menu</option>
+          </optgroup>
+          <optgroup label="Evaluations">
+            <option value="rating">Star / Numerical Rating (1-5)</option>
+            <option value="scale">Linear Scale (1-10)</option>
+            <option value="range">Range Slider</option>
+            <option value="boolean">Yes / No (Toggle)</option>
+          </optgroup>
+          <optgroup label="Uploads">
+            <option value="file">File Upload</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <!-- Dynamic Container: Shown only when user selects Radio, Checkbox, or Dropdown -->
+      <div class="form-group" id="optionsGroup" hidden>
+        <label for="optionTagInput">Choices</label>
+        <div id="optionTagsContainer" class="option-tags-input-wrap">
+          <div id="optionTagsList" class="option-tags-list"></div>
+          <input type="text" id="optionTagInput" class="option-tag-input-field"
+            placeholder="Type a choice and press Enter or comma…" autocomplete="off" />
+        </div>
+        <input type="hidden" id="questionOptions" name="options" />
+        <span style="font-size: 11px; color: var(--text-muted);">Press <kbd>Enter</kbd> or <kbd>,</kbd> after each
+          choice.</span>
+      </div>
+
+      <!-- Dynamic Container: Shown only when user selects Range -->
+      <div id="rangeGroup" hidden>
+        <div class="range-config-grid">
+          <div class="form-group">
+            <label for="rangeMin">Min</label>
+            <input type="number" id="rangeMin" name="rangeMin" value="0" />
+          </div>
+          <div class="form-group">
+            <label for="rangeMax">Max</label>
+            <input type="number" id="rangeMax" name="rangeMax" value="100" />
+          </div>
+          <div class="form-group">
+            <label for="rangeStep">Step</label>
+            <input type="number" id="rangeStep" name="rangeStep" value="1" min="1" />
+          </div>
+        </div>
+        <div class="range-preview-wrap">
+          <label class="range-preview-label">
+            Preview &nbsp;<span id="rangePreviewValue" class="range-preview-value">50</span>
+          </label>
+          <input type="range" id="rangePreview" class="range-preview-slider" min="0" max="100" step="1" value="50" />
+          <div class="range-preview-minmax">
+            <span id="rangePreviewMin">0</span>
+            <span id="rangePreviewMax">100</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group" style="flex-direction: row; align-items: center; gap: 8px;">
+        <input type="checkbox" id="questionRequired" style="width: auto;" />
+        <label for="questionRequired" style="margin: 0; font-weight: normal;">Required field</label>
+      </div>
+
+      <div class="dialog-footer">
+        <button type="button" class="btn-secondary" data-close-dialog>Cancel</button>
+        <button type="submit" class="btn-primary">Save Question</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Delete Question Dialog -->
+  <dialog id="deleteQuestionDialog" class="modal-dialog">
+    <div class="dialog-header">
+      <h2>Confirm Deletion</h2>
+      <button type="button" class="btn-close" data-close-dialog aria-label="Close">&times;</button>
+    </div>
+    <p>Are you sure you want to delete this question? This cannot be undone.</p>
+    <div class="dialog-footer">
+      <button type="button" class="btn-secondary" data-close-dialog>Cancel</button>
+      <button type="button" class="btn-danger" id="confirmDeleteQuestionBtn">Delete</button>
+    </div>
+  </dialog>
+
+  <!-- Survey Preview Dialog (Read-Only for Admin) -->
+  <dialog id="surveyPreviewDialog" class="modal-dialog preview-modal-dialog">
+    <div class="dialog-header">
+      <div>
+        <h2 id="previewSurveyTitle">Survey Preview</h2>
+        <p id="previewSurveyDesc" style="color: var(--text-muted); font-size: 13px; margin-top: 4px;"></p>
+      </div>
+      <button type="button" class="btn-close" data-close-dialog aria-label="Close">&times;</button>
+    </div>
+
+    <div class="dialog-body preview-dialog-body" id="previewQuestionsList">
+      <!-- Dynamically populated read-only question items -->
+    </div>
+
+    <div class="dialog-footer">
+      <button type="button" class="btn-primary" data-close-dialog>Close</button>
+    </div>
+  </dialog>
+
+  <script type="module" src="js/questions.js"></script>
+</body>
+
+</html>
