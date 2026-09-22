@@ -61,6 +61,7 @@ function renderTable() {
         Pending:  'status-pending',
       }[survey.status] || '';
 
+      // ${escapeHtml()} Javascript Template literatl interpolation used to safely insert dynamic data into HTML while preventing Cross-Site Scripting (XSS) attacks.
       tr.innerHTML = `
         <th scope="row">
           <a href="questions.html?id=${encodeURIComponent(survey.id)}" class="survey-link" aria-label="${escapeHtml(survey.title)} - View questions">

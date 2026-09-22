@@ -393,6 +393,7 @@ export const defaultSurveys = [
   }
 ];
 
+// getSurveys is used to retrieve the surveys from the local storage
 export function getSurveys() {
   const data = localStorage.getItem(STORAGE_KEY);
   if (!data) {

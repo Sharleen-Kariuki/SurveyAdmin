@@ -23,6 +23,8 @@
 </head>
 <body>
     <main class="container">
+
+      <!-- Hero Section -->
       <section aria-labelledby="heroTitle">
         <div class="section-text">
           <h1 id="heroTitle">Admin Survey</h1>
@@ -37,6 +39,8 @@
         <caption>LIST OF SURVEYS</caption>
         <thead>
           <tr>
+
+            <!-- scope is used to make the table accessible to screen readers -->
             <th scope="col">Title</th>
             <th scope="col">Description</th>
             <th scope="col">Responses</th>
@@ -46,8 +50,10 @@
             <th scope="col" class="text-right">Actions</th>
           </tr>
         </thead>
+
+        <!-- the id is used to render the data dynamically using the javasript code -->
         <tbody id="surveyTableBody">
-          <!-- Rendered dynamically -->
+          <!-- Data is inserted here -->
         </tbody>
       </table>
 
@@ -56,6 +62,7 @@
         <span class="pagination-info" id="paginationInfo">Showing 0 of 0</span>
         
         <div class="pagination-buttons">
+          <!-- Used html entities/character references: &laquo; &lsaquo; &rsaquo; &raquo; to display <<, <, >, >>  -->
           <button type="button" class="btn-page" id="firstPageBtn" aria-label="First page">&laquo;</button>
           <button type="button" class="btn-page" id="prevPageBtn" aria-label="Previous page">&lsaquo;</button>
           
@@ -63,7 +70,7 @@
           
           <button type="button" class="btn-page" id="nextPageBtn" aria-label="Next page">&rsaquo;</button>
           <button type="button" class="btn-page" id="lastPageBtn" aria-label="Last page">&raquo;</button>
-        </div>
+        </div> 
       </nav>
     </main>
   

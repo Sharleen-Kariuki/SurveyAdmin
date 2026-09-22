@@ -9,7 +9,7 @@ if (!surveyId) {
   window.location.href = 'index.html';
 }
 
-// ─── Utility: HTML Escape ──────────────────────────────────────────────────────
+// Utility: HTML Escape they are for security purposes.
 function escapeHtml(str) {
   if (str === null || str === undefined) return '';
   return String(str)
@@ -20,7 +20,7 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-// ─── DOM Elements ──────────────────────────────────────────────────────────────
+// ─── DOM Elements 
 const surveyHeading = document.getElementById('surveyTitleHeading');
 const surveyDesc = document.getElementById('surveyDescriptionText');
 const tableBody = document.getElementById('questionsTableBody');
