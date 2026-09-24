@@ -325,12 +325,14 @@ export function validateQuestionCard(card) {
     if (isRequired && (!hidden || !hidden.value)) {
       errorMessage = 'Please select Yes or No.';
     }
-  } else if (qType === 'file') {
+    } else if (qType === 'file') {
     const fileInput = card.querySelector('input[type="file"]');
     controlToHighlight = fileInput;
     if (isRequired && (!fileInput || fileInput.files.length === 0)) {
       errorMessage = 'Please choose a file to upload.';
+    }
   } else {
+
     // Fallback for default or other input types
     const input = card.querySelector('.preview-input');
     controlToHighlight = input;
@@ -525,3 +527,4 @@ if (previewResetBtn) {
     }
   });
 }
+  
