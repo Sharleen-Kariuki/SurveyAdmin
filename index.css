@@ -1052,11 +1052,29 @@ kbd {
 }
 
 .preview-input.is-invalid,
+.has-error .preview-input,
+.has-error input[type="file"],
 .preview-interactive-scale.is-invalid,
 .preview-choice-list.is-invalid,
 .preview-boolean-group.is-invalid {
-  border-color: var(--danger) !important;
+  border-color: #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.15) !important;
   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.35) !important;
+  color: var(--text-main);
+}
+
+.preview-input.is-invalid:focus,
+.has-error .preview-input:focus {
+  border-color: #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.22) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.55) !important;
+  outline: none !important;
+}
+
+.preview-choice-list.is-invalid .preview-choice-label,
+.has-error .preview-choice-list .preview-choice-label {
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  background: rgba(239, 68, 68, 0.12) !important;
 }
 
 /* Choice option labels */
@@ -1222,10 +1240,46 @@ kbd {
   animation: fadeInError 0.18s ease-in;
 }
 
-.preview-validation-error .alert-icon {
-  font-size: 13px;
+.alert-icon-img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.preview-validation-error .alert-icon-img {
+  width: 16px;
+  height: 16px;
+}
+
+.preview-validation-banner .alert-icon-img {
+  width: 19px;
+  height: 19px;
+}
+
+.alert-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 11px;
   line-height: 1;
   flex-shrink: 0;
+  text-align: center;
+}
+
+.preview-validation-error .alert-icon {
+  background: #ef4444;
+  color: #ffffff;
+  width: 16px;
+  height: 16px;
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .preview-validation-banner {
@@ -1240,16 +1294,33 @@ kbd {
   animation: fadeInError 0.2s ease-in;
 }
 
+.preview-validation-banner .alert-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .preview-validation-banner.banner-success {
   background: rgba(34, 197, 94, 0.2);
   border: 1px solid rgba(34, 197, 94, 0.45);
   color: #86efac;
 }
 
+.preview-validation-banner.banner-success .alert-icon {
+  background: #22c55e;
+  color: #ffffff;
+}
+
 .preview-validation-banner.banner-error {
   background: rgba(239, 68, 68, 0.2);
   border: 1px solid rgba(239, 68, 68, 0.45);
   color: #fca5a5;
+}
+
+.preview-validation-banner.banner-error .alert-icon {
+  background: #ef4444;
+  color: #ffffff;
 }
 
 @keyframes fadeInError {

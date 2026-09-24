@@ -330,6 +330,13 @@ export function validateQuestionCard(card) {
     controlToHighlight = fileInput;
     if (isRequired && (!fileInput || fileInput.files.length === 0)) {
       errorMessage = 'Please choose a file to upload.';
+  } else {
+    // Fallback for default or other input types
+    const input = card.querySelector('.preview-input');
+    controlToHighlight = input;
+    const val = input ? input.value.trim() : '';
+    if (isRequired && !val) {
+      errorMessage = 'This field is required.';
     }
   }
 
@@ -339,10 +346,14 @@ export function validateQuestionCard(card) {
     if (controlToHighlight) {
       controlToHighlight.classList.add('is-invalid');
     }
+    const input = card.querySelector('.preview-input');
+    if (input) {
+      input.classList.add('is-invalid');
+    }
     if (errorContainer) {
       errorContainer.innerHTML = `
         <div class="preview-validation-error" role="alert">
-          <span class="alert-icon">⚠️</span>
+          <img src="./assets/exclamation.png" alt="Error" class="alert-icon-img" />
           <span>${escapeHtml(errorMessage)}</span>
         </div>
       `;
@@ -352,6 +363,10 @@ export function validateQuestionCard(card) {
     card.classList.remove('has-error');
     if (controlToHighlight) {
       controlToHighlight.classList.remove('is-invalid');
+    }
+    const input = card.querySelector('.preview-input');
+    if (input) {
+      input.classList.remove('is-invalid');
     }
     if (errorContainer) {
       errorContainer.innerHTML = '';
@@ -488,13 +503,13 @@ if (previewValidateBtn) {
       previewValidationBanner.style.display = 'flex';
       if (hasError) {
         previewValidationBanner.className = 'preview-validation-banner banner-error';
-        previewValidationBanner.innerHTML = '<span class="alert-icon">⚠️</span> <span>Validation failed! Please complete required fields or correct invalid entries with red borders.</span>';
+        previewValidationBanner.innerHTML = '<img src="./assets/exclamation.png" alt="Validation error" class="alert-icon-img" /> <span>Validation failed! Please complete required fields or correct invalid entries with red borders.</span>';
         if (firstErrorCard) {
           firstErrorCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       } else {
         previewValidationBanner.className = 'preview-validation-banner banner-success';
-        previewValidationBanner.innerHTML = '<span>✓</span> <span>All fields are valid! The survey data passes all validation rules.</span>';
+        previewValidationBanner.innerHTML = '<span class="alert-icon">✓</span> <span>All fields are valid! The survey data passes all validation rules.</span>';
       }
     }
   });
