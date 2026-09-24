@@ -393,14 +393,16 @@ export const defaultSurveys = [
   }
 ];
 
-// getSurveys is used to retrieve the surveys from the local storage
+// getSurveys function is used to retrieve the surveys from the local storage.
 export function getSurveys() {
   const data = localStorage.getItem(STORAGE_KEY);
+  // if nothing is stored it seeds localStorage with defaultSurveys and returns the defaultSurveys.
   if (!data) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultSurveys));
     return defaultSurveys;
   }
   try {
+    // checks if stored data is an array and it its empty and then resets localStorage to defaultSurvey and returns them.
     const parsed = JSON.parse(data);
     if (!Array.isArray(parsed) || parsed.length === 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultSurveys));
@@ -431,15 +433,19 @@ export function getSurveys() {
   }
 }
 
+// Adds a survey to local storage.
 export function saveSurveys(surveys) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(surveys));
 }
 
+// Deletes a survey from local storage based on the provided survey ID.
 export function deleteSurveyById(id) {
   const surveys = getSurveys().filter(s => s.id !== id);
   saveSurveys(surveys);
 }
 
+
+// Saves or updates a survey in local storage. If the surveyData contains an id, it updates the existing survey; otherwise, it creates a new survey with a unique id.
 export function saveOrUpdateSurvey(surveyData) {
   const surveys = getSurveys();
   const currentYear = new Date().getFullYear().toString();
@@ -460,7 +466,7 @@ export function saveOrUpdateSurvey(surveyData) {
     }
   }
 
-  // Create new
+  // Create new survey
   const newId = Date.now().toString();
   surveys.push({
     id: newId,
@@ -514,6 +520,7 @@ export function saveQuestion(surveyId, questionData) {
   return savedId;
 }
 
+// Deletes a question from a survey based on the provided survey ID and question ID.
 export function deleteQuestion(surveyId, questionId) {
   const surveys = getSurveys();
   const survey = surveys.find((s) => s.id === surveyId);

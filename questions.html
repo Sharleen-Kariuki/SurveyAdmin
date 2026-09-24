@@ -1,3 +1,4 @@
+<!-- This is the structure of the survey questions page -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -23,9 +24,27 @@
     <!-- Hero section -->
     <section aria-labelledby="surveyTitleHeading">
       <div class="section-text">
-        <a href="index.html" class="survey-link">&larr; Back to Surveys</a>
+        <div class="survey-top-nav">
+          <a href="index.html" class="survey-link">&larr; Back to Surveys</a>
+          <div class="survey-nav-controls">
+            <span class="survey-nav-label">Survey:</span>
+
+            <!-- DropDown to select the survey you want. -->
+            <select id="surveySelectDropdown" class="survey-quick-select" aria-label="Switch survey"></select>
+
+
+            <div class="pagination-buttons">
+              <button type="button" class="btn-page" id="pageFirstSurveyBtn" aria-label="First survey" title="First survey">&laquo;</button>
+              <button type="button" class="btn-page" id="pagePrevSurveyBtn" aria-label="Previous survey" title="Previous survey">&lsaquo;</button>
+              <span class="current-page-badge" id="pageSurveyBadge">1 / 1</span>
+              <button type="button" class="btn-page" id="pageNextSurveyBtn" aria-label="Next survey" title="Next survey">&rsaquo;</button>
+              <button type="button" class="btn-page" id="pageLastSurveyBtn" aria-label="Last survey" title="Last survey">&raquo;</button>
+            </div>
+          </div>
+        </div>
         <h1 id="surveyTitleHeading">Survey Questions</h1>
         <p id="surveyDescriptionText">Loading survey...</p>
+        <div class="survey-meta-pills" id="surveyMetaPills"></div>
       </div>
       <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
         <button type="button" id="previewSurveyBtn" class="btn-secondary">Preview Survey</button>
@@ -36,6 +55,7 @@
     <!-- Questions Table -->
     <table>
       <caption>LIST OF QUESTIONS</caption>
+      <!-- Manually created table header -->
       <thead>
         <tr>
           <th scope="col">#</th>
@@ -47,7 +67,7 @@
       </thead>
 
       <tbody id="questionsTableBody">
-        <!-- Rendered dynamically -->
+        <!-- Automatic injection of the questions in the survey -->
       </tbody>
     </table>
 
@@ -110,7 +130,7 @@
         </select>
       </div>
 
-      <!-- Dynamic Container: Shown only when user selects Radio, Checkbox, or Dropdown -->
+      <!-- Dynamic Container: Shown when user selects Radio, Checkbox, or Dropdown -->
       <div class="form-group" id="optionsGroup" hidden>
         <label for="optionTagInput">Choices</label>
         <div id="optionTagsContainer" class="option-tags-input-wrap">
@@ -176,22 +196,61 @@
     </div>
   </dialog>
 
-  <!-- Survey Preview Dialog (Read-Only for Admin) -->
-  <dialog id="surveyPreviewDialog" class="modal-dialog preview-modal-dialog">
-    <div class="dialog-header">
-      <div>
+  <!-- Survey Preview Dialog  -->
+  <dialog id="surveyPreviewDialog" class="modal-dialog preview-modal-dialog preview-mode-portrait">
+    <div class="dialog-header preview-header-block">
+      <div class="preview-header-top">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <span class="preview-badge-label">Survey Preview</span>
+          
+          <!-- Orientation toggle: Portrait vs Landscape -->
+          <div class="preview-orientation-toggle" role="group" aria-label="Preview orientation">
+            <button type="button" id="previewPortraitBtn" class="btn-orientation active" title="Portrait mode"> Portrait</button>
+            <button type="button" id="previewLandscapeBtn" class="btn-orientation" title="Landscape mode"> Landscape</button>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-close-dialog aria-label="Close">&times;</button>
+      </div>
+
+      <!-- Survey Switcher & Pagination Bar in Preview Dialog -->
+      <div class="preview-survey-pagination-bar">
+        <select id="previewSurveySelect" class="survey-quick-select" aria-label="Select survey to preview"></select>
+        <div class="pagination-buttons">
+          <button type="button" class="btn-page" id="previewFirstSurveyBtn" aria-label="First survey" title="First survey">&laquo;</button>
+          <button type="button" class="btn-page" id="previewPrevSurveyBtn" aria-label="Previous survey" title="Previous survey">&lsaquo;</button>
+          <span class="current-page-badge" id="previewSurveyBadge">1 / 1</span>
+          <button type="button" class="btn-page" id="previewNextSurveyBtn" aria-label="Next survey" title="Next survey">&rsaquo;</button>
+          <button type="button" class="btn-page" id="previewLastSurveyBtn" aria-label="Last survey" title="Last survey">&raquo;</button>
+        </div>
+      </div>
+
+      <div class="preview-details-card">
         <h2 id="previewSurveyTitle">Survey Preview</h2>
         <p id="previewSurveyDesc" style="color: var(--text-muted); font-size: 13px; margin-top: 4px;"></p>
+        <div class="survey-meta-pills" id="previewMetaPills"></div>
       </div>
-      <button type="button" class="btn-close" data-close-dialog aria-label="Close">&times;</button>
     </div>
+
+    <!-- Live validation banner container -->
+    <div id="previewValidationBanner" style="display: none;"></div>
 
     <div class="dialog-body preview-dialog-body" id="previewQuestionsList">
-      <!-- Dynamically populated read-only question items -->
+      <!-- Dynamically populated interactive question items -->
     </div>
 
-    <div class="dialog-footer">
-      <button type="button" class="btn-primary" data-close-dialog>Close</button>
+    <div class="dialog-footer preview-footer-split">
+      <div class="pagination-buttons">
+        <button type="button" class="btn-page" id="previewFooterFirstBtn" aria-label="First survey" title="First survey">&laquo;</button>
+        <button type="button" class="btn-page" id="previewFooterPrevBtn" aria-label="Previous survey" title="Previous survey">&lsaquo;</button>
+        <span class="current-page-badge" id="previewFooterBadge">1 / 1</span>
+        <button type="button" class="btn-page" id="previewFooterNextBtn" aria-label="Next survey" title="Next survey">&rsaquo;</button>
+        <button type="button" class="btn-page" id="previewFooterLastBtn" aria-label="Last survey" title="Last survey">&raquo;</button>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <button type="button" class="btn-secondary" id="previewResetBtn" title="Reset all preview inputs">Reset</button>
+        <button type="button" class="btn-primary" id="previewValidateBtn" style="box-shadow: 0 2px 8px rgba(236, 72, 153, 0.4);">Test Validate</button>
+        <button type="button" class="btn-secondary" data-close-dialog>Close</button>
+      </div>
     </div>
   </dialog>
 

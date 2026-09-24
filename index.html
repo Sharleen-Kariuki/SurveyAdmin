@@ -1,3 +1,4 @@
+<!-- The structure of the landing page -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +8,7 @@
     <title>Admin Dashboard - Survey Management System</title>
 
     <!-- Preview card -->
-    <meta property="og:title" content="Admin Survey.">
+    <meta property="og:title" content="Survey List | Admin Survey Management.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="">
     <meta property="og:image" content=""> 
@@ -35,11 +36,11 @@
         </div>
       </section>
   
-      <table>
+      <table class="survey-table">
         <caption>LIST OF SURVEYS</caption>
         <thead>
-          <tr>
-
+          <tr >
+            <!-- Static implementation of the table headers -->
             <!-- scope is used to make the table accessible to screen readers -->
             <th scope="col">Title</th>
             <th scope="col">Description</th>
@@ -51,10 +52,11 @@
           </tr>
         </thead>
 
-        <!-- the id is used to render the data dynamically using the javasript code -->
+        <!-- the id is used to render the data dynamically using the javascript code -->
         <tbody id="surveyTableBody">
-          <!-- Data is inserted here -->
+          <!-- Data is automatically added -->
         </tbody>
+
       </table>
 
       <!-- Table Pagination Controls -->

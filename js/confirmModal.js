@@ -1,4 +1,4 @@
-// Manages the delet confirmation dialog independently.
+// Manages the delete confirmation dialog independently.
 import { deleteSurveyById } from './storage.js';
 
 const dialog = document.getElementById('confirmDeleteDialog');

@@ -40,6 +40,7 @@ export function openFormModal(survey = null) {
   dialog.showModal();
 }
 
+// Handles form submission, validates input, saves or updates the survey, and closes the modal.
 export function setupFormSubmit(onSuccess) {
   form.addEventListener('submit', (e) => {
     e.preventDefault();

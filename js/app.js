@@ -1,17 +1,9 @@
 import { getSurveys } from './storage.js';
 import { openFormModal, setupFormSubmit } from './formModal.js';
 import { openDeleteModal } from './confirmModal.js';
+import { escapeHtml } from './utils.js';
 
-function escapeHtml(str) {
-  if (str === null || str === undefined) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
+// DOM Elements
 const tableBody = document.getElementById('surveyTableBody');
 const createBtn = document.getElementById('createSurveyBtn');
 
@@ -40,7 +32,7 @@ function renderTable() {
   const endIndex = Math.min(startIndex + ROWS_PER_PAGE, totalRows);
   const currentSlice = allSurveys.slice(startIndex, endIndex);
 
-  // Render rows
+  // Render table rows
   tableBody.innerHTML = '';
   if (currentSlice.length === 0) {
     tableBody.innerHTML = `
