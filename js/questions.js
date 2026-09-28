@@ -22,8 +22,10 @@ const initialSurveys = getSurveys();
 if (initialSurveys.length === 0) {
   window.location.href = 'index.html';
 } else {
-  const exists = initialSurveys.some((s) => s.id === surveyId);
-  if (!exists) {
+  const matched = initialSurveys.find((s) => String(s.id) === String(surveyId));
+  if (matched) {
+    surveyId = matched.id;
+  } else {
     surveyId = initialSurveys[0].id;
     const newUrl = new URL(window.location.href);
     newUrl.searchParams.set('id', surveyId);
@@ -75,8 +77,12 @@ function buildRangeSummary(q) {
 // ─── Render Questions Table ───────────────────────────────────────────────────
 function renderQuestions() {
   const allSurveys = getSurveys();
-  const surveyIndex = allSurveys.findIndex((s) => s.id === surveyId);
-  const survey = surveyIndex !== -1 ? allSurveys[surveyIndex] : null;
+  let surveyIndex = allSurveys.findIndex((s) => String(s.id) === String(surveyId));
+  if (surveyIndex === -1 && allSurveys.length > 0) {
+    surveyIndex = 0;
+    surveyId = allSurveys[0].id;
+  }
+  const survey = allSurveys[surveyIndex];
 
   if (!survey) {
     window.location.href = 'index.html';

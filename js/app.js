@@ -123,13 +123,15 @@ tableBody.addEventListener('click', (e) => {
   if (!row || !row.dataset.id) return;
 
   const surveyId = row.dataset.id;
-  const survey = getSurveys().find((s) => s.id === surveyId);
+  const survey = getSurveys().find((s) => String(s.id) === String(surveyId));
   if (!survey) return;
 
-  if (e.target.matches('.btn-edit')) {
+  if (e.target.closest('.btn-edit')) {
     openFormModal(survey);
-  } else if (e.target.matches('.btn-delete')) {
+  } else if (e.target.closest('.btn-delete')) {
     openDeleteModal(survey, renderTable);
+  } else if (!e.target.closest('a')) {
+    window.location.href = `questions.html?id=${encodeURIComponent(survey.id)}`;
   }
 });
 

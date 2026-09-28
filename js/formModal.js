@@ -9,6 +9,7 @@ const idInput = document.getElementById('surveyId');
 const titleInput = document.getElementById('surveyTitle');
 const descInput = document.getElementById('surveyDesc');
 const statusInput = document.getElementById('surveyStatus');
+const previewColumnsInput = document.getElementById('surveyPreviewColumns');
 
 // Close listeners for buttons marked with data-close-dialog
 dialog.querySelectorAll('[data-close-dialog]').forEach(btn => {
@@ -30,11 +31,17 @@ export function openFormModal(survey = null) {
     titleInput.value = survey.title;
     descInput.value = survey.description;
     statusInput.value = survey.status;
+    if (previewColumnsInput) {
+      previewColumnsInput.value = survey.previewColumns || 2;
+    }
   } else {
     // Create mode
     modalTitle.textContent = 'Create Survey';
     idInput.value = '';
     statusInput.value = 'Active';
+    if (previewColumnsInput) {
+      previewColumnsInput.value = 2;
+    }
   }
 
   dialog.showModal();
@@ -57,7 +64,8 @@ export function setupFormSubmit(onSuccess) {
       id: idInput.value || null,
       title,
       description,
-      status: statusInput.value || 'Active'
+      status: statusInput.value || 'Active',
+      previewColumns: parseInt(previewColumnsInput?.value, 10) || 2
     });
 
     dialog.close();

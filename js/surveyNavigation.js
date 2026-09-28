@@ -29,7 +29,7 @@ let getCurrentSurveyIdFn = null;
 
 function syncSurveyDropdowns(allSurveys, currentId) {
   const optionsHtml = allSurveys
-    .map((s, idx) => `<option value="${escapeHtml(s.id)}" ${s.id === currentId ? 'selected' : ''}>${idx + 1}. ${escapeHtml(s.title)}</option>`)
+    .map((s, idx) => `<option value="${escapeHtml(s.id)}" ${String(s.id) === String(currentId) ? 'selected' : ''}>${idx + 1}. ${escapeHtml(s.title)}</option>`)
     .join('');
 
   if (pageSurveySelect) pageSurveySelect.innerHTML = optionsHtml;
@@ -84,7 +84,7 @@ export function switchSurveyByIndex(targetIndex) {
 export function goToSurvey(direction) {
   const allSurveys = getSurveys();
   const currentId = getCurrentSurveyIdFn ? getCurrentSurveyIdFn() : null;
-  const currentIndex = allSurveys.findIndex((s) => s.id === currentId);
+  const currentIndex = allSurveys.findIndex((s) => String(s.id) === String(currentId));
   if (currentIndex === -1) return;
 
   let targetIndex = currentIndex;
@@ -111,7 +111,7 @@ export function initSurveyNavigation({ onSurveyChange, getCurrentSurveyId }) {
   if (pageSurveySelect) {
     pageSurveySelect.addEventListener('change', (e) => {
       const allSurveys = getSurveys();
-      const idx = allSurveys.findIndex((s) => s.id === e.target.value);
+      const idx = allSurveys.findIndex((s) => String(s.id) === String(e.target.value));
       if (idx !== -1) switchSurveyByIndex(idx);
     });
   }
@@ -125,7 +125,7 @@ export function initSurveyNavigation({ onSurveyChange, getCurrentSurveyId }) {
   if (previewSurveySelect) {
     previewSurveySelect.addEventListener('change', (e) => {
       const allSurveys = getSurveys();
-      const idx = allSurveys.findIndex((s) => s.id === e.target.value);
+      const idx = allSurveys.findIndex((s) => String(s.id) === String(e.target.value));
       if (idx !== -1) switchSurveyByIndex(idx);
     });
   }

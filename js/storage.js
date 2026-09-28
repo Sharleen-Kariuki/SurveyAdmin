@@ -411,6 +411,13 @@ export function getSurveys() {
 
     // Auto-enrich existing data if default surveys are missing rich question sets
     let needsUpdate = false;
+    parsed.forEach((s) => {
+      if (!s.previewColumns) {
+        s.previewColumns = 2;
+        needsUpdate = true;
+      }
+    });
+
     defaultSurveys.forEach((defSurvey) => {
       const existing = parsed.find((s) => s.id === defSurvey.id);
       if (!existing) {
@@ -440,7 +447,7 @@ export function saveSurveys(surveys) {
 
 // Deletes a survey from local storage based on the provided survey ID.
 export function deleteSurveyById(id) {
-  const surveys = getSurveys().filter(s => s.id !== id);
+  const surveys = getSurveys().filter(s => String(s.id) !== String(id));
   saveSurveys(surveys);
 }
 
@@ -449,16 +456,18 @@ export function deleteSurveyById(id) {
 export function saveOrUpdateSurvey(surveyData) {
   const surveys = getSurveys();
   const currentYear = new Date().getFullYear().toString();
+  const previewColumns = Math.max(1, Math.min(3, parseInt(surveyData.previewColumns, 10) || 2));
 
   if (surveyData.id) {
     // Edit existing
-    const index = surveys.findIndex(s => s.id === surveyData.id);
+    const index = surveys.findIndex(s => String(s.id) === String(surveyData.id));
     if (index !== -1) {
       surveys[index] = {
         ...surveys[index],
         title: surveyData.title,
         description: surveyData.description,
         status: surveyData.status,
+        previewColumns,
         updatedAt: currentYear
       };
       saveSurveys(surveys);
@@ -473,6 +482,7 @@ export function saveOrUpdateSurvey(surveyData) {
     title: surveyData.title,
     description: surveyData.description,
     status: surveyData.status,
+    previewColumns,
     responses: 0,
     questions: [],
     createdAt: currentYear,
@@ -485,12 +495,12 @@ export function saveOrUpdateSurvey(surveyData) {
 
 export function getSurveyById(id) {
   const surveys = getSurveys();
-  return surveys.find((s) => s.id === id) || null;
+  return surveys.find((s) => String(s.id) === String(id)) || null;
 }
 
 export function saveQuestion(surveyId, questionData) {
   const surveys = getSurveys();
-  const survey = surveys.find((s) => s.id === surveyId);
+  const survey = surveys.find((s) => String(s.id) === String(surveyId));
   if (!survey) return null;
 
   if (!survey.questions) {
@@ -503,7 +513,7 @@ export function saveQuestion(surveyId, questionData) {
   let savedId = questionData.id;
   if (questionData.id) {
     // Edit existing question
-    const index = survey.questions.findIndex((q) => q.id === questionData.id);
+    const index = survey.questions.findIndex((q) => String(q.id) === String(questionData.id));
     if (index !== -1) {
       survey.questions[index] = { ...survey.questions[index], ...questionData };
     }
@@ -523,12 +533,12 @@ export function saveQuestion(surveyId, questionData) {
 // Deletes a question from a survey based on the provided survey ID and question ID.
 export function deleteQuestion(surveyId, questionId) {
   const surveys = getSurveys();
-  const survey = surveys.find((s) => s.id === surveyId);
+  const survey = surveys.find((s) => String(s.id) === String(surveyId));
   if (!survey || !survey.questions) return;
 
   const currentYear = new Date().getFullYear().toString();
   survey.updatedAt = currentYear;
 
-  survey.questions = survey.questions.filter((q) => q.id !== questionId);
+  survey.questions = survey.questions.filter((q) => String(q.id) !== String(questionId));
   saveSurveys(surveys);
 }

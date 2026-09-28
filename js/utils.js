@@ -56,8 +56,8 @@ export function getMetaHtml(survey) {
 
   return `
     <span class="status-badge ${statusClass}">${escapeHtml(survey.status || 'Active')}</span>
-    <span class="survey-meta-pill">📋 ${qCount} Question${qCount === 1 ? '' : 's'}</span>
-    <span class="survey-meta-pill">👥 ${rCount} Response${rCount === 1 ? '' : 's'}</span>
+    <span class="survey-meta-pill">${qCount} Question${qCount === 1 ? '' : 's'}</span>
+    <span class="survey-meta-pill">${rCount} Response${rCount === 1 ? '' : 's'}</span>
   `;
 }
 

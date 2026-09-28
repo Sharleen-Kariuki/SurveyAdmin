@@ -19,12 +19,36 @@
   <meta property="og:image:height" content="630">
 
   <!-- Link to Stylesheet -->
-   <link rel="icon" type="image/jpeg" href="./assets/logo.jpeg">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
   <link rel="stylesheet" href="./index.css">
+
+  <!-- Theme Manager -->
+  <script type="module" src="js/theme.js"></script>
 </head>
 
 <body>
   <main class="container">
+
+    <!-- Top Bar: System Branding & 3-Color Switcher -->
+    <header class="system-top-bar" id="systemTopBar" aria-label="System customization bar">
+      <a href="index.html" class="system-brand" title="Back to Surveys Dashboard">
+        <div class="system-brand-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+          </svg>
+        </div>
+        <div class="system-brand-info">
+          <span class="system-brand-title">SurveyAdmin</span>
+          <span class="system-brand-badge" id="systemCurrentThemeName">Burgundy</span>
+        </div>
+      </a>
+
+      <div class="theme-switcher-panel" id="colorSwitcherPanel" role="region" aria-label="Color Theme Switcher">
+        <span class="switcher-header-label">Theme:</span>
+        <div class="theme-swatches" id="themeSwatches" role="radiogroup" aria-label="Theme colors"></div>
+      </div>
+    </header>
 
     <!-- Hero section -->
     <section aria-labelledby="surveyTitleHeading">
@@ -202,16 +226,18 @@
   </dialog>
 
   <!-- Survey Preview Dialog  -->
-  <dialog id="surveyPreviewDialog" class="modal-dialog preview-modal-dialog preview-mode-portrait">
+  <dialog id="surveyPreviewDialog" class="modal-dialog preview-modal-dialog">
     <div class="dialog-header preview-header-block">
       <div class="preview-header-top">
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
           <span class="preview-badge-label">Survey Preview</span>
           
-          <!-- Orientation toggle: Portrait vs Landscape -->
-          <div class="preview-orientation-toggle" role="group" aria-label="Preview orientation">
-            <button type="button" id="previewPortraitBtn" class="btn-orientation active" title="Portrait mode"> Portrait</button>
-            <button type="button" id="previewLandscapeBtn" class="btn-orientation" title="Landscape mode"> Landscape</button>
+          <!-- Columns toggle: 1, 2, or 3 columns -->
+          <div class="preview-columns-toggle" role="group" aria-label="Preview Columns Layout">
+            <span class="preview-columns-label">Columns:</span>
+            <button type="button" class="btn-col-toggle" data-cols="1" id="previewCol1Btn" title="1 Column Layout">1</button>
+            <button type="button" class="btn-col-toggle" data-cols="2" id="previewCol2Btn" title="2 Columns Layout">2</button>
+            <button type="button" class="btn-col-toggle" data-cols="3" id="previewCol3Btn" title="3 Columns Layout">3</button>
           </div>
         </div>
         <button type="button" class="btn-close" data-close-dialog aria-label="Close">&times;</button>

@@ -6,9 +6,34 @@
   <meta name="description" content="Create a new survey - Admin Survey Platform">
   <title>Create Survey - Admin Survey</title>
   <link rel="stylesheet" href="./index.css">
+
+  <!-- Centralized Theme Engine -->
+  <script type="module" src="js/theme.js"></script>
 </head>
 <body>
-  <main class="container" style="max-width: 640px;">
+  <main class="container" style="max-width: 680px;">
+
+    <!-- Top Bar: System Branding & 3-Color Switcher -->
+    <header class="system-top-bar" id="systemTopBar" aria-label="System customization bar">
+      <a href="index.html" class="system-brand" title="Back to Surveys Dashboard">
+        <div class="system-brand-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+          </svg>
+        </div>
+        <div class="system-brand-info">
+          <span class="system-brand-title">SurveyAdmin</span>
+          <span class="system-brand-badge" id="systemCurrentThemeName">Burgundy</span>
+        </div>
+      </a>
+
+      <div class="theme-switcher-panel" id="colorSwitcherPanel" role="region" aria-label="Color Theme Switcher">
+        <span class="switcher-header-label">Theme:</span>
+        <div class="theme-swatches" id="themeSwatches" role="radiogroup" aria-label="Theme colors"></div>
+      </div>
+    </header>
+
     <section aria-labelledby="createHeading" style="margin-bottom: 24px;">
       <div class="section-text">
         <a href="index.html" class="survey-link">&larr; Back to Surveys</a>
@@ -38,6 +63,15 @@
           </select>
         </div>
 
+        <div class="form-group">
+          <label for="surveyPreviewColumns">Preview Columns</label>
+          <select id="surveyPreviewColumns" name="previewColumns">
+            <option value="1">1 Column</option>
+            <option value="2" selected>2 Columns</option>
+            <option value="3">3 Columns</option>
+          </select>
+        </div>
+
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border);">
           <a href="index.html" class="btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center;">Cancel</a>
           <button type="submit" id="saveAndQuestionsBtn" class="btn-primary">Save &amp; Add Questions &rarr;</button>
@@ -53,19 +87,22 @@
     const titleInput = document.getElementById('surveyTitle');
     const descInput = document.getElementById('surveyDesc');
     const statusInput = document.getElementById('surveyStatus');
+    const previewColumnsInput = document.getElementById('surveyPreviewColumns');
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const title = titleInput.value.trim();
       const description = descInput.value.trim();
       const status = statusInput.value;
+      const previewColumns = parseInt(previewColumnsInput.value, 10) || 2;
 
       if (!title || !description) return;
 
       const newId = saveOrUpdateSurvey({
         title,
         description,
-        status
+        status,
+        previewColumns
       });
 
       window.location.href = `questions.html?id=${encodeURIComponent(newId)}`;

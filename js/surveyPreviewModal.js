@@ -10,8 +10,6 @@ const previewQuestionsList = document.getElementById('previewQuestionsList');
 const previewMetaPills = document.getElementById('previewMetaPills');
 const previewValidationBanner = document.getElementById('previewValidationBanner');
 
-const previewPortraitBtn = document.getElementById('previewPortraitBtn');
-const previewLandscapeBtn = document.getElementById('previewLandscapeBtn');
 const previewValidateBtn = document.getElementById('previewValidateBtn');
 const previewResetBtn = document.getElementById('previewResetBtn');
 
@@ -21,24 +19,26 @@ if (surveyPreviewDialog) {
   setupDialogClose(surveyPreviewDialog);
 }
 
-// ─── Orientation Toggle (Portrait / Landscape) ─────────────────────────────────
-export function setPreviewOrientation(mode) {
-  if (!surveyPreviewDialog) return;
-  if (mode === 'landscape') {
-    surveyPreviewDialog.classList.remove('preview-mode-portrait');
-    surveyPreviewDialog.classList.add('preview-mode-landscape');
-    previewLandscapeBtn?.classList.add('active');
-    previewPortraitBtn?.classList.remove('active');
-  } else {
-    surveyPreviewDialog.classList.remove('preview-mode-landscape');
-    surveyPreviewDialog.classList.add('preview-mode-portrait');
-    previewPortraitBtn?.classList.add('active');
-    previewLandscapeBtn?.classList.remove('active');
-  }
+// ─── Column Layout Toggle (1, 2, or 3 Columns) ──────────────────────────────────
+export function setPreviewColumns(cols) {
+  const colNum = Math.max(1, Math.min(3, parseInt(cols, 10) || 2));
+  if (!previewQuestionsList) return;
+
+  previewQuestionsList.classList.remove('preview-cols-1', 'preview-cols-2', 'preview-cols-3');
+  previewQuestionsList.classList.add(`preview-cols-${colNum}`);
+
+  document.querySelectorAll('.btn-col-toggle').forEach(btn => {
+    const bCols = parseInt(btn.getAttribute('data-cols'), 10);
+    btn.classList.toggle('active', bCols === colNum);
+  });
 }
 
-if (previewPortraitBtn) previewPortraitBtn.addEventListener('click', () => setPreviewOrientation('portrait'));
-if (previewLandscapeBtn) previewLandscapeBtn.addEventListener('click', () => setPreviewOrientation('landscape'));
+document.querySelectorAll('.btn-col-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const cols = parseInt(btn.getAttribute('data-cols'), 10);
+    setPreviewColumns(cols);
+  });
+});
 
 // ─── Question Item HTML Builder ───────────────────────────────────────────────
 export function buildInteractiveQuestionItem(q, idx) {
@@ -355,7 +355,6 @@ export function validateQuestionCard(card) {
     if (errorContainer) {
       errorContainer.innerHTML = `
         <div class="preview-validation-error" role="alert">
-          <img src="./assets/exclamation.png" alt="Error" class="alert-icon-img" />
           <span>${escapeHtml(errorMessage)}</span>
         </div>
       `;
@@ -390,6 +389,10 @@ export function renderPreviewContent(surveyId) {
     previewMetaPills.innerHTML = getMetaHtml(survey);
   }
 
+  // Apply configured preview columns (1, 2, or 3)
+  const cols = survey.previewColumns ? parseInt(survey.previewColumns, 10) : 2;
+  setPreviewColumns(cols);
+
   // Clear any existing validation banner on render
   if (previewValidationBanner) {
     previewValidationBanner.style.display = 'none';
@@ -402,9 +405,8 @@ export function renderPreviewContent(surveyId) {
     if (questions.length === 0) {
       previewQuestionsList.innerHTML = `
         <div class="preview-empty-state">
-          <span class="empty-icon">📝</span>
-          <h3 style="font-size: 15px; margin-bottom: 4px; color: var(--text-main);">No questions in this survey</h3>
-          <p>Click <strong>+ Add Question</strong> to define questions, then preview them here.</p>
+          <h3 style="font-size: 15px; margin-bottom: 4px; color: #000000;">No questions in this survey</h3>
+          <p style="color: var(--text-muted); font-size: 13px;">Click <strong>+ Add Question</strong> to define questions, then preview them here.</p>
         </div>
       `;
     } else {
