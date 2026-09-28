@@ -1714,3 +1714,9 @@ textarea.preview-input.is-invalid,
     justify-content: flex-start;
   }
 }
+
+img{
+  height: 20px;
+  width: 20px;
+
+}
