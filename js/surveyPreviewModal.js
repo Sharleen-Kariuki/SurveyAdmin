@@ -255,7 +255,7 @@ export function buildInteractiveQuestionItem(q, idx) {
   }
 
   return `
-    <div class="preview-readonly-card" data-card-qid="${q.id}" data-type="${q.type}" data-required="${isRequired ? 'true' : 'false'}">
+    <div class="preview-readonly-card" data-card-qid="${q.id}" data-type="${q.type}" data-required="${isRequired ? 'true' : 'false'}" data-question-text="${escapeHtml(q.text)}">
       <div class="preview-readonly-qheader">
         <span class="preview-readonly-num">Q${idx + 1}</span>
         <div class="preview-readonly-qtitle">
@@ -272,6 +272,88 @@ export function buildInteractiveQuestionItem(q, idx) {
   `;
 }
 
+// ─── Field Name Helper for Specific Validation ─────────────────────────────────
+function getFieldSpecificName(card, qType) {
+  let rawText = card.dataset.questionText || '';
+  if (!rawText) {
+    const titleEl = card.querySelector('.preview-readonly-qtitle');
+    if (titleEl) {
+      const clone = titleEl.cloneNode(true);
+      const star = clone.querySelector('.preview-required-star');
+      if (star) star.remove();
+      rawText = clone.textContent.trim();
+    }
+  }
+
+  rawText = rawText.trim();
+
+  // If question type is email, default to 'email address' when generic or matching email
+  if (qType === 'email') {
+    if (!rawText || /^email(?:\s+address)?\??$/i.test(rawText)) {
+      return 'email address';
+    }
+  }
+
+  let label = rawText;
+
+  // Extract target noun phrase if phrased as a prompt/question:
+  // e.g. "What is your email address?" -> "email address"
+  // "Please enter your full name:" -> "full name"
+  // "Enter your contact number" -> "contact number"
+  const patterns = [
+    /^(?:what\s+(?:is|are)\s+your|what's\s+your|please\s+(?:enter|provide|input|fill\s+in|select|specify)\s+(?:your\s+)?|enter\s+(?:your\s+)?|provide\s+(?:your\s+)?|input\s+(?:your\s+)?)(.+?)[?:.!]?$/i,
+    /^(?:your\s+)(.+?)[?:.!]?$/i
+  ];
+
+  for (const pattern of patterns) {
+    const match = label.match(pattern);
+    if (match && match[1] && match[1].trim().length > 1) {
+      label = match[1].trim();
+      break;
+    }
+  }
+
+  // Strip trailing punctuation
+  label = label.replace(/[?:.!]+$/, '').trim();
+
+  const isQuestionSentence = /\b(?:how|why|when|where|which|who|whom|rate|is|are|do|does|can|would|should)\b/i.test(label);
+
+  if (label && label.length <= 40 && !isQuestionSentence) {
+    if (/^email$/i.test(label)) {
+      return 'email address';
+    }
+    return label.toLowerCase();
+  }
+
+  // Fallback to specific type-based friendly field names
+  switch (qType) {
+    case 'email':
+      return 'email address';
+    case 'number':
+      return 'number';
+    case 'date':
+      return 'date';
+    case 'textarea':
+      return 'response';
+    case 'text':
+      return 'text';
+    case 'select':
+      return 'selection';
+    case 'file':
+      return 'file';
+    default:
+      return '';
+  }
+}
+
+function getRequiredErrorMessage(card, qType) {
+  const fieldName = getFieldSpecificName(card, qType);
+  if (fieldName) {
+    return `The ${fieldName} field is required.`;
+  }
+  return 'This field is required.';
+}
+
 // ─── Single Question Validation ────────────────────────────────────────────────
 export function validateQuestionCard(card) {
   const qType = card.dataset.type;
@@ -286,7 +368,7 @@ export function validateQuestionCard(card) {
     const val = input ? input.value.trim() : '';
 
     if (isRequired && !val) {
-      errorMessage = 'This field is required.';
+      errorMessage = getRequiredErrorMessage(card, qType);
     } else if (val && qType === 'email') {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(val)) {
@@ -302,43 +384,51 @@ export function validateQuestionCard(card) {
     controlToHighlight = choiceList;
     const checked = card.querySelector('input[type="radio"]:checked');
     if (isRequired && !checked) {
-      errorMessage = 'Please select an option.';
+      const fieldName = getFieldSpecificName(card, qType);
+      errorMessage = fieldName ? `Please select an option for ${fieldName}.` : 'Please select an option.';
     }
   } else if (qType === 'checkbox') {
     const choiceList = card.querySelector('.preview-choice-list');
     controlToHighlight = choiceList;
     const checked = card.querySelectorAll('input[type="checkbox"]:checked');
     if (isRequired && checked.length === 0) {
-      errorMessage = 'Please select at least one option.';
+      const fieldName = getFieldSpecificName(card, qType);
+      errorMessage = fieldName ? `Please select at least one option for ${fieldName}.` : 'Please select at least one option.';
     }
   } else if (qType === 'rating' || qType === 'scale') {
     const scaleGroup = card.querySelector('.preview-interactive-scale');
     controlToHighlight = scaleGroup;
     const hidden = card.querySelector('input[type="hidden"]');
     if (isRequired && (!hidden || !hidden.value)) {
-      errorMessage = qType === 'rating' ? 'Please select a rating (1-5).' : 'Please select a score on the scale (1-10).';
+      const fieldName = getFieldSpecificName(card, qType);
+      if (qType === 'rating') {
+        errorMessage = fieldName ? `Please select a rating for ${fieldName} (1-5).` : 'Please select a rating (1-5).';
+      } else {
+        errorMessage = fieldName ? `Please select a score for ${fieldName} (1-10).` : 'Please select a score on the scale (1-10).';
+      }
     }
   } else if (qType === 'boolean') {
     const boolGroup = card.querySelector('.preview-boolean-group');
     controlToHighlight = boolGroup;
     const hidden = card.querySelector('input[type="hidden"]');
     if (isRequired && (!hidden || !hidden.value)) {
-      errorMessage = 'Please select Yes or No.';
+      const fieldName = getFieldSpecificName(card, qType);
+      errorMessage = fieldName ? `Please select Yes or No for ${fieldName}.` : 'Please select Yes or No.';
     }
-    } else if (qType === 'file') {
+  } else if (qType === 'file') {
     const fileInput = card.querySelector('input[type="file"]');
     controlToHighlight = fileInput;
     if (isRequired && (!fileInput || fileInput.files.length === 0)) {
-      errorMessage = 'Please choose a file to upload.';
+      const fieldName = getFieldSpecificName(card, qType);
+      errorMessage = fieldName ? `The ${fieldName} field is required.` : 'Please choose a file to upload.';
     }
   } else {
-
     // Fallback for default or other input types
     const input = card.querySelector('.preview-input');
     controlToHighlight = input;
     const val = input ? input.value.trim() : '';
     if (isRequired && !val) {
-      errorMessage = 'This field is required.';
+      errorMessage = getRequiredErrorMessage(card, qType);
     }
   }
 
