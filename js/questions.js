@@ -132,13 +132,13 @@ function renderQuestions() {
       }
 
       tr.innerHTML = `
-        <td>${startIndex + index + 1}</td>
-        <th scope="row">${escapeHtml(q.text)}</th>
-        <td>
+        <td class="text-left">${startIndex + index + 1}</td>
+        <th scope="row" class="text-left">${escapeHtml(q.text)}</th>
+        <td class="text-left">
           <span class="type-badge">${TYPE_LABELS[q.type] || escapeHtml(q.type)}</span>
           <div class="table-options-wrap">${optionsCell}</div>
         </td>
-        <td>${q.required ? 'Yes' : 'No'}</td>
+        <td class="text-left">${q.required ? 'Yes' : 'No'}</td>
         <td class="text-right">
           <div class="row-actions">
             <button type="button" class="btn-action btn-edit" aria-label="Edit question">Edit</button>

@@ -43,15 +43,17 @@
     </section>
 
     <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; box-shadow: var(--shadow-sm);">
-      <form id="standaloneCreateForm">
-        <div class="form-group">
+      <form id="standaloneCreateForm" novalidate>
+        <div class="form-group" id="surveyTitleGroup">
           <label for="surveyTitle">Survey Title</label>
           <input type="text" id="surveyTitle" name="title" required placeholder="e.g. Employee Engagement Q3" />
+          <div class="error-container"></div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="surveyDescGroup">
           <label for="surveyDesc">Description</label>
           <textarea id="surveyDesc" name="description" rows="3" required placeholder="Brief description of the survey purpose..."></textarea>
+          <div class="error-container"></div>
         </div>
 
         <div class="form-group">
@@ -61,6 +63,7 @@
             <option value="Pending">Pending</option>
             <option value="Inactive">Inactive</option>
           </select>
+          <div class="error-container"></div>
         </div>
 
         <div class="form-group">
@@ -70,6 +73,7 @@
             <option value="2" selected>2 Columns</option>
             <option value="3">3 Columns</option>
           </select>
+          <div class="error-container"></div>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border);">
@@ -82,12 +86,30 @@
 
   <script type="module">
     import { saveOrUpdateSurvey } from './js/storage.js';
+    import { setFieldValidation, clearFieldValidation } from './js/utils.js';
 
     const form = document.getElementById('standaloneCreateForm');
     const titleInput = document.getElementById('surveyTitle');
     const descInput = document.getElementById('surveyDesc');
     const statusInput = document.getElementById('surveyStatus');
     const previewColumnsInput = document.getElementById('surveyPreviewColumns');
+
+    const titleGroup = document.getElementById('surveyTitleGroup');
+    const descGroup = document.getElementById('surveyDescGroup');
+    const titleErrorContainer = titleGroup?.querySelector('.error-container');
+    const descErrorContainer = descGroup?.querySelector('.error-container');
+
+    titleInput?.addEventListener('input', () => {
+      if (titleInput.value.trim()) {
+        clearFieldValidation({ formGroup: titleGroup, control: titleInput, errorContainer: titleErrorContainer });
+      }
+    });
+
+    descInput?.addEventListener('input', () => {
+      if (descInput.value.trim()) {
+        clearFieldValidation({ formGroup: descGroup, control: descInput, errorContainer: descErrorContainer });
+      }
+    });
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -96,7 +118,39 @@
       const status = statusInput.value;
       const previewColumns = parseInt(previewColumnsInput.value, 10) || 2;
 
-      if (!title || !description) return;
+      let isValid = true;
+      let firstInvalid = null;
+
+      if (!title) {
+        setFieldValidation({
+          formGroup: titleGroup,
+          control: titleInput,
+          errorContainer: titleErrorContainer,
+          errorMessage: 'The title field is required.'
+        });
+        isValid = false;
+        if (!firstInvalid) firstInvalid = titleInput;
+      } else {
+        clearFieldValidation({ formGroup: titleGroup, control: titleInput, errorContainer: titleErrorContainer });
+      }
+
+      if (!description) {
+        setFieldValidation({
+          formGroup: descGroup,
+          control: descInput,
+          errorContainer: descErrorContainer,
+          errorMessage: 'The description field is required.'
+        });
+        isValid = false;
+        if (!firstInvalid) firstInvalid = descInput;
+      } else {
+        clearFieldValidation({ formGroup: descGroup, control: descInput, errorContainer: descErrorContainer });
+      }
+
+      if (!isValid) {
+        firstInvalid?.focus();
+        return;
+      }
 
       const newId = saveOrUpdateSurvey({
         title,

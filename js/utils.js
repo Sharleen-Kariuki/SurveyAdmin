@@ -76,3 +76,55 @@ export function setupDialogClose(dialog) {
     if (e.target === dialog) dialog.close();
   });
 }
+
+/**
+ * Standardizes rendering or clearing of field validation errors across all dialog input fields.
+ * Matches the style and behavior of the preview modal validation errors.
+ * @param {object} params
+ * @param {HTMLElement} [params.formGroup] - The parent .form-group element
+ * @param {HTMLElement} [params.control] - The input / select / textarea / custom wrap element
+ * @param {HTMLElement} [params.errorContainer] - The .error-container element
+ * @param {string} [params.errorMessage] - Error message text, or empty string to clear
+ * @returns {boolean} True if valid (no error), false if error was shown
+ */
+export function setFieldValidation({ formGroup, control, errorContainer, errorMessage }) {
+  if (errorMessage) {
+    if (formGroup) formGroup.classList.add('has-error');
+    if (control) control.classList.add('is-invalid');
+    if (errorContainer) {
+      errorContainer.innerHTML = `
+        <div class="preview-validation-error dialog-validation-error" role="alert">
+          <img src="./assets/exclamation.png" alt="Validation error" class="alert-icon-img" />
+          <span>${escapeHtml(errorMessage)}</span>
+        </div>
+      `;
+    }
+    return false;
+  } else {
+    if (formGroup) formGroup.classList.remove('has-error');
+    if (control) control.classList.remove('is-invalid');
+    if (errorContainer) {
+      errorContainer.innerHTML = '';
+    }
+    return true;
+  }
+}
+
+/**
+ * Clears validation error on a field.
+ */
+export function clearFieldValidation({ formGroup, control, errorContainer }) {
+  return setFieldValidation({ formGroup, control, errorContainer, errorMessage: '' });
+}
+
+/**
+ * Clears all validation errors inside a container or dialog form.
+ * @param {HTMLElement} container 
+ */
+export function clearAllValidationErrors(container) {
+  if (!container) return;
+  container.querySelectorAll('.has-error').forEach((el) => el.classList.remove('has-error'));
+  container.querySelectorAll('.is-invalid').forEach((el) => el.classList.remove('is-invalid'));
+  container.querySelectorAll('.error-container').forEach((el) => { el.innerHTML = ''; });
+}
+

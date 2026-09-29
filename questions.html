@@ -84,10 +84,10 @@
       <!-- Manually created table header -->
       <thead>
         <tr>
-          <th scope="col">#</th>
-          <th scope="col">Question Text</th>
-          <th scope="col">Type</th>
-          <th scope="col">Required</th>
+          <th scope="col" class="text-left">#</th>
+          <th scope="col" class="text-left">Question Text</th>
+          <th scope="col" class="text-left">Type</th>
+          <th scope="col" class="text-left">Required</th>
           <th scope="col" class="text-right">Actions</th>
         </tr>
       </thead>
@@ -115,7 +115,7 @@
 
   <!-- Question Create/Edit Dialog -->
   <dialog id="questionFormDialog" class="modal-dialog">
-    <form id="questionForm">
+    <form id="questionForm" novalidate>
       <div class="dialog-header">
         <h2 id="questionDialogTitle">Add Question</h2>
         <button type="button" class="btn-close" data-close-dialog aria-label="Close">&times;</button>
@@ -123,9 +123,10 @@
 
       <input type="hidden" id="questionId" />
 
-      <div class="form-group">
+      <div class="form-group" id="questionTextGroup">
         <label for="questionText">Question Text</label>
         <input type="text" id="questionText" required placeholder="e.g., How satisfied are you with our service?" />
+        <div class="error-container"></div>
       </div>
 
       <!-- Question Input Type -->
@@ -154,6 +155,7 @@
             <option value="file">File Upload</option>
           </optgroup>
         </select>
+        <div class="error-container"></div>
       </div>
 
       <!-- Dynamic Container: Shown when user selects Radio, Checkbox, or Dropdown -->
@@ -167,6 +169,7 @@
         <input type="hidden" id="questionOptions" name="options" />
         <span style="font-size: 11px; color: var(--text-muted);">Press <kbd>Enter</kbd> or <kbd>,</kbd> after each
           choice.</span>
+        <div class="error-container"></div>
       </div>
 
       <!-- Dynamic Container: Shown only when user selects Range -->
@@ -185,6 +188,7 @@
             <input type="number" id="rangeStep" name="rangeStep" value="1" min="1" />
           </div>
         </div>
+        <div class="error-container" id="rangeErrorContainer"></div>
         <div class="range-preview-wrap">
           <label class="range-preview-label">
             Preview &nbsp;<span id="rangePreviewValue" class="range-preview-value">50</span>

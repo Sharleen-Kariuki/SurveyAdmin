@@ -1,6 +1,6 @@
 // Manages the Question Create & Edit Dialog
 import { saveQuestion } from './storage.js';
-import { escapeHtml, CHOICE_TYPES, setupDialogClose } from './utils.js';
+import { escapeHtml, CHOICE_TYPES, setupDialogClose, setFieldValidation, clearFieldValidation, clearAllValidationErrors } from './utils.js';
 
 // DOM Elements
 const dialog = document.getElementById('questionFormDialog');
@@ -11,11 +11,15 @@ const questionTextInput = document.getElementById('questionText');
 const questionTypeInput = document.getElementById('questionType');
 const questionRequiredInput = document.getElementById('questionRequired');
 
+const questionTextGroup = document.getElementById('questionTextGroup') || questionTextInput?.closest('.form-group');
+const questionTextErrorContainer = questionTextGroup?.querySelector('.error-container');
+
 const optionsGroup = document.getElementById('optionsGroup');
 const optionsHidden = document.getElementById('questionOptions');
 const optionTagInput = document.getElementById('optionTagInput');
 const optionTagsList = document.getElementById('optionTagsList');
 const optionTagsContainer = document.getElementById('optionTagsContainer');
+const optionsErrorContainer = optionsGroup?.querySelector('.error-container');
 
 const rangeGroup = document.getElementById('rangeGroup');
 const rangeMinInput = document.getElementById('rangeMin');
@@ -25,6 +29,7 @@ const rangePreview = document.getElementById('rangePreview');
 const rangePreviewVal = document.getElementById('rangePreviewValue');
 const rangePreviewMin = document.getElementById('rangePreviewMin');
 const rangePreviewMax = document.getElementById('rangePreviewMax');
+const rangeErrorContainer = document.getElementById('rangeErrorContainer');
 
 let activeSurveyId = null;
 let onSaveCallback = null;
@@ -42,6 +47,10 @@ function renderTags() {
   });
   if (optionsHidden) {
     optionsHidden.value = currentTags.join(',');
+  }
+
+  if (currentTags.length > 0) {
+    clearFieldValidation({ formGroup: optionsGroup, control: optionTagsContainer, errorContainer: optionsErrorContainer });
   }
 }
 
@@ -84,6 +93,12 @@ function syncRangePreview() {
 function updateOptionsVisibility() {
   const type = questionTypeInput.value;
 
+  // Clear previous validation state on type toggle
+  clearFieldValidation({ formGroup: optionsGroup, control: optionTagsContainer, errorContainer: optionsErrorContainer });
+  if (rangeErrorContainer) rangeErrorContainer.innerHTML = '';
+  rangeGroup?.querySelectorAll('.is-invalid').forEach((el) => el.classList.remove('is-invalid'));
+  rangeGroup?.querySelectorAll('.has-error').forEach((el) => el.classList.remove('has-error'));
+
   if (CHOICE_TYPES.includes(type)) {
     optionsGroup?.removeAttribute('hidden');
     rangeGroup?.setAttribute('hidden', '');
@@ -102,11 +117,32 @@ function updateOptionsVisibility() {
 // ─── Event Setup ──────────────────────────────────────────────────────────────
 if (dialog) {
   setupDialogClose(dialog);
+  dialog.querySelectorAll('[data-close-dialog]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      clearAllValidationErrors(form);
+    });
+  });
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) {
+      clearAllValidationErrors(form);
+    }
+  });
 }
 
 if (questionTypeInput) {
   questionTypeInput.addEventListener('change', updateOptionsVisibility);
 }
+
+// Real-time clearance for question text input
+questionTextInput?.addEventListener('input', () => {
+  if (questionTextInput.value.trim()) {
+    clearFieldValidation({
+      formGroup: questionTextGroup,
+      control: questionTextInput,
+      errorContainer: questionTextErrorContainer
+    });
+  }
+});
 
 if (optionTagsList) {
   optionTagsList.addEventListener('click', (e) => {
@@ -132,6 +168,9 @@ if (optionTagInput) {
       addTag(optionTagInput.value.slice(0, -1));
       optionTagInput.value = '';
     }
+    if (currentTags.length > 0) {
+      clearFieldValidation({ formGroup: optionsGroup, control: optionTagsContainer, errorContainer: optionsErrorContainer });
+    }
   });
 }
 
@@ -148,10 +187,16 @@ if (rangePreview) {
 }
 
 [rangeMinInput, rangeMaxInput, rangeStepInput].forEach((el) => {
-  if (el) el.addEventListener('input', syncRangePreview);
+  if (el) {
+    el.addEventListener('input', () => {
+      syncRangePreview();
+      if (rangeErrorContainer) rangeErrorContainer.innerHTML = '';
+      rangeGroup?.querySelectorAll('.is-invalid').forEach((inp) => inp.classList.remove('is-invalid'));
+    });
+  }
 });
 
-// Form submission handler
+// Form submission handler with standard field validation
 if (form) {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -159,32 +204,109 @@ if (form) {
     const selectedType = questionTypeInput.value;
     const questionText = questionTextInput.value.trim();
 
+    let isValid = true;
+    let firstInvalidControl = null;
+
+    // Validate Question Text
     if (!questionText) {
-      questionTextInput.focus();
-      return;
+      setFieldValidation({
+        formGroup: questionTextGroup,
+        control: questionTextInput,
+        errorContainer: questionTextErrorContainer,
+        errorMessage: 'The question text field is required.'
+      });
+      isValid = false;
+      if (!firstInvalidControl) firstInvalidControl = questionTextInput;
+    } else {
+      clearFieldValidation({
+        formGroup: questionTextGroup,
+        control: questionTextInput,
+        errorContainer: questionTextErrorContainer
+      });
     }
 
     const options = CHOICE_TYPES.includes(selectedType)
       ? [...currentTags]
       : [];
 
-    if (CHOICE_TYPES.includes(selectedType) && options.length === 0) {
-      alert('Please enter at least one choice option for this question.');
-      optionTagInput?.focus();
-      return;
+    // Validate Choice Options if question type requires choices
+    if (CHOICE_TYPES.includes(selectedType)) {
+      if (options.length === 0) {
+        setFieldValidation({
+          formGroup: optionsGroup,
+          control: optionTagsContainer,
+          errorContainer: optionsErrorContainer,
+          errorMessage: 'The choices field is required.'
+        });
+        isValid = false;
+        if (!firstInvalidControl) firstInvalidControl = optionTagInput;
+      } else {
+        clearFieldValidation({
+          formGroup: optionsGroup,
+          control: optionTagsContainer,
+          errorContainer: optionsErrorContainer
+        });
+      }
     }
 
+    // Validate Range Configuration
     let rangeConfig = {};
     if (selectedType === 'range') {
+      const minVal = parseFloat(rangeMinInput.value);
+      const maxVal = parseFloat(rangeMaxInput.value);
+      const stepVal = parseFloat(rangeStepInput.value);
+
+      let rangeError = '';
+      if (rangeMinInput.value.trim() === '' || isNaN(minVal)) {
+        rangeError = 'The min field is required.';
+        rangeMinInput.classList.add('is-invalid');
+        if (!firstInvalidControl) firstInvalidControl = rangeMinInput;
+      } else if (rangeMaxInput.value.trim() === '' || isNaN(maxVal)) {
+        rangeError = 'The max field is required.';
+        rangeMaxInput.classList.add('is-invalid');
+        if (!firstInvalidControl) firstInvalidControl = rangeMaxInput;
+      } else if (minVal >= maxVal) {
+        rangeError = 'Min value must be less than max value.';
+        rangeMinInput.classList.add('is-invalid');
+        rangeMaxInput.classList.add('is-invalid');
+        if (!firstInvalidControl) firstInvalidControl = rangeMinInput;
+      } else if (isNaN(stepVal) || stepVal <= 0) {
+        rangeError = 'The step field must be greater than 0.';
+        rangeStepInput.classList.add('is-invalid');
+        if (!firstInvalidControl) firstInvalidControl = rangeStepInput;
+      }
+
+      if (rangeError) {
+        isValid = false;
+        if (rangeErrorContainer) {
+          rangeErrorContainer.innerHTML = `
+            <div class="preview-validation-error dialog-validation-error" role="alert">
+              <img src="./assets/exclamation.png" alt="Validation error" class="alert-icon-img" />
+              <span>${escapeHtml(rangeError)}</span>
+            </div>
+          `;
+        }
+      } else {
+        if (rangeErrorContainer) rangeErrorContainer.innerHTML = '';
+        rangeMinInput.classList.remove('is-invalid');
+        rangeMaxInput.classList.remove('is-invalid');
+        rangeStepInput.classList.remove('is-invalid');
+      }
+
       rangeConfig = {
-        rangeMin: parseFloat(rangeMinInput.value) || 0,
-        rangeMax: parseFloat(rangeMaxInput.value) || 100,
-        rangeStep: parseFloat(rangeStepInput.value) || 1,
+        rangeMin: minVal || 0,
+        rangeMax: maxVal || 100,
+        rangeStep: stepVal || 1,
       };
     } else if (selectedType === 'rating') {
       rangeConfig = { rangeMin: 1, rangeMax: 5, rangeStep: 1 };
     } else if (selectedType === 'scale') {
       rangeConfig = { rangeMin: 1, rangeMax: 10, rangeStep: 1 };
+    }
+
+    if (!isValid) {
+      firstInvalidControl?.focus();
+      return;
     }
 
     saveQuestion(activeSurveyId, {
@@ -196,6 +318,7 @@ if (form) {
       ...rangeConfig,
     });
 
+    clearAllValidationErrors(form);
     dialog.close();
     if (onSaveCallback) onSaveCallback();
   });
@@ -211,6 +334,7 @@ if (form) {
 export function openQuestionFormModal({ surveyId, question = null, onSave }) {
   activeSurveyId = surveyId;
   onSaveCallback = onSave;
+  clearAllValidationErrors(form);
 
   if (question) {
     // Edit mode
@@ -245,3 +369,4 @@ export function openQuestionFormModal({ surveyId, question = null, onSave }) {
 
   dialog.showModal();
 }
+

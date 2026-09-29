@@ -341,6 +341,18 @@ function getFieldSpecificName(card, qType) {
       return 'selection';
     case 'file':
       return 'file';
+    case 'radio':
+      return 'choice';
+    case 'checkbox':
+      return 'choice';
+    case 'rating':
+      return 'rating';
+    case 'scale':
+      return 'rating';
+    case 'range':
+      return 'value';
+    case 'boolean':
+      return 'response';
     default:
       return '';
   }
@@ -384,43 +396,34 @@ export function validateQuestionCard(card) {
     controlToHighlight = choiceList;
     const checked = card.querySelector('input[type="radio"]:checked');
     if (isRequired && !checked) {
-      const fieldName = getFieldSpecificName(card, qType);
-      errorMessage = fieldName ? `Please select an option for ${fieldName}.` : 'Please select an option.';
+      errorMessage = getRequiredErrorMessage(card, qType);
     }
   } else if (qType === 'checkbox') {
     const choiceList = card.querySelector('.preview-choice-list');
     controlToHighlight = choiceList;
     const checked = card.querySelectorAll('input[type="checkbox"]:checked');
     if (isRequired && checked.length === 0) {
-      const fieldName = getFieldSpecificName(card, qType);
-      errorMessage = fieldName ? `Please select at least one option for ${fieldName}.` : 'Please select at least one option.';
+      errorMessage = getRequiredErrorMessage(card, qType);
     }
   } else if (qType === 'rating' || qType === 'scale') {
     const scaleGroup = card.querySelector('.preview-interactive-scale');
     controlToHighlight = scaleGroup;
     const hidden = card.querySelector('input[type="hidden"]');
     if (isRequired && (!hidden || !hidden.value)) {
-      const fieldName = getFieldSpecificName(card, qType);
-      if (qType === 'rating') {
-        errorMessage = fieldName ? `Please select a rating for ${fieldName} (1-5).` : 'Please select a rating (1-5).';
-      } else {
-        errorMessage = fieldName ? `Please select a score for ${fieldName} (1-10).` : 'Please select a score on the scale (1-10).';
-      }
+      errorMessage = getRequiredErrorMessage(card, qType);
     }
   } else if (qType === 'boolean') {
     const boolGroup = card.querySelector('.preview-boolean-group');
     controlToHighlight = boolGroup;
     const hidden = card.querySelector('input[type="hidden"]');
     if (isRequired && (!hidden || !hidden.value)) {
-      const fieldName = getFieldSpecificName(card, qType);
-      errorMessage = fieldName ? `Please select Yes or No for ${fieldName}.` : 'Please select Yes or No.';
+      errorMessage = getRequiredErrorMessage(card, qType);
     }
   } else if (qType === 'file') {
     const fileInput = card.querySelector('input[type="file"]');
     controlToHighlight = fileInput;
     if (isRequired && (!fileInput || fileInput.files.length === 0)) {
-      const fieldName = getFieldSpecificName(card, qType);
-      errorMessage = fieldName ? `The ${fieldName} field is required.` : 'Please choose a file to upload.';
+      errorMessage = getRequiredErrorMessage(card, qType);
     }
   } else {
     // Fallback for default or other input types
@@ -445,6 +448,7 @@ export function validateQuestionCard(card) {
     if (errorContainer) {
       errorContainer.innerHTML = `
         <div class="preview-validation-error" role="alert">
+          <img src="./assets/exclamation.png" alt="Validation error" class="alert-icon-img" />
           <span>${escapeHtml(errorMessage)}</span>
         </div>
       `;
