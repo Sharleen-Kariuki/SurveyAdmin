@@ -2,48 +2,22 @@ import { getSurveys } from './storage.js';
 import { openFormModal, setupFormSubmit } from './formModal.js';
 import { openDeleteModal } from './confirmModal.js';
 import { escapeHtml } from './utils.js';
+import { initSurveyDataTable, destroySurveyDataTable } from './Datatable.js';
 
 // DOM Elements
 const tableBody = document.getElementById('surveyTableBody');
 const createBtn = document.getElementById('createSurveyBtn');
 
-// Pagination State & DOM Elements
-const ROWS_PER_PAGE = 5;
-let currentPage = 1;
-
-const firstBtn = document.getElementById('firstPageBtn');
-const prevBtn = document.getElementById('prevPageBtn');
-const nextBtn = document.getElementById('nextPageBtn');
-const lastBtn = document.getElementById('lastPageBtn');
-const paginationInfo = document.getElementById('paginationInfo');
-const currentPageBadge = document.getElementById('currentPageBadge');
-
 function renderTable() {
   const allSurveys = getSurveys();
-  const totalRows = allSurveys.length;
-  const totalPages = Math.max(1, Math.ceil(totalRows / ROWS_PER_PAGE));
 
-  // Constrain active page
-  if (currentPage > totalPages) currentPage = totalPages;
-  if (currentPage < 1) currentPage = 1;
+  // Tear down existing DataTable before replacing rows
+  destroySurveyDataTable();
 
-  // Calculate slice
-  const startIndex = (currentPage - 1) * ROWS_PER_PAGE;
-  const endIndex = Math.min(startIndex + ROWS_PER_PAGE, totalRows);
-  const currentSlice = allSurveys.slice(startIndex, endIndex);
-
-  // Render table rows
+  // Populate table rows
   tableBody.innerHTML = '';
-  if (currentSlice.length === 0) {
-    tableBody.innerHTML = `
-      <tr>
-        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 32px 16px;">
-          No surveys available. Click <strong>+ Create Survey</strong> to add one.
-        </td>
-      </tr>
-    `;
-  } else {
-    currentSlice.forEach((survey) => {
+  if (allSurveys.length > 0) {
+    allSurveys.forEach((survey) => {
       const tr = document.createElement('tr');
       tr.dataset.id = survey.id;
 
@@ -53,7 +27,6 @@ function renderTable() {
         Pending:  'status-pending',
       }[survey.status] || '';
 
-      // ${escapeHtml()} Javascript Template literatl interpolation used to safely insert dynamic data into HTML while preventing Cross-Site Scripting (XSS) attacks.
       tr.innerHTML = `
         <th scope="row">
           <a href="questions.html?id=${encodeURIComponent(survey.id)}" class="survey-link" aria-label="${escapeHtml(survey.title)} - View questions">
@@ -76,43 +49,9 @@ function renderTable() {
     });
   }
 
-  // Update labels & disabled states
-  paginationInfo.textContent = totalRows > 0 
-    ? `Showing ${startIndex + 1}-${endIndex} of ${totalRows}` 
-    : `Showing 0 of 0`;
-  currentPageBadge.textContent = `${currentPage} / ${totalPages}`;
-
-  firstBtn.disabled = currentPage === 1;
-  prevBtn.disabled = currentPage === 1;
-  nextBtn.disabled = currentPage === totalPages;
-  lastBtn.disabled = currentPage === totalPages;
+  // Initialize DataTables
+  initSurveyDataTable('#surveyTable');
 }
-
-// Pagination Controls Listeners
-firstBtn.addEventListener('click', () => {
-  currentPage = 1;
-  renderTable();
-});
-
-prevBtn.addEventListener('click', () => {
-  if (currentPage > 1) {
-    currentPage--;
-    renderTable();
-  }
-});
-
-nextBtn.addEventListener('click', () => {
-  const totalPages = Math.max(1, Math.ceil(getSurveys().length / ROWS_PER_PAGE));
-  if (currentPage < totalPages) {
-    currentPage++;
-    renderTable();
-  }
-});
-
-lastBtn.addEventListener('click', () => {
-  currentPage = Math.max(1, Math.ceil(getSurveys().length / ROWS_PER_PAGE));
-  renderTable();
-});
 
 // Setup modals & table actions
 createBtn.addEventListener('click', () => openFormModal(null));

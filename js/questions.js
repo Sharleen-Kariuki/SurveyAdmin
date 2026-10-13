@@ -12,6 +12,10 @@ import {
   renderPreviewContent,
   isSurveyPreviewOpen,
 } from './surveyPreviewModal.js';
+import {
+  initQuestionsDataTable,
+  destroyQuestionsDataTable
+} from './Datatable.js';
 
 // Read ?id= from URL
 const params = new URLSearchParams(window.location.search);
@@ -41,17 +45,6 @@ const tableBody = document.getElementById('questionsTableBody');
 
 const openCreateBtn = document.getElementById('createQuestionBtn');
 const previewSurveyBtn = document.getElementById('previewSurveyBtn');
-
-// Questions Table Pagination State & Elements
-const ROWS_PER_PAGE = 5;
-let currentPage = 1;
-
-const firstBtn = document.getElementById('firstPageBtn');
-const prevBtn = document.getElementById('prevPageBtn');
-const nextBtn = document.getElementById('nextPageBtn');
-const lastBtn = document.getElementById('lastPageBtn');
-const paginationInfo = document.getElementById('paginationInfo');
-const currentPageBadge = document.getElementById('currentPageBadge');
 
 // ─── Table Cell Formatters ────────────────────────────────────────────────────
 function buildOptionPills(options) {
@@ -98,29 +91,14 @@ function renderQuestions() {
 
   updateSurveyPaginationUI(allSurveys, surveyIndex);
 
+  // Tear down existing DataTable before re-populating table rows
+  destroyQuestionsDataTable();
+
   const allQuestions = survey.questions || [];
-  const totalRows = allQuestions.length;
-  const totalPages = Math.max(1, Math.ceil(totalRows / ROWS_PER_PAGE));
-
-  if (currentPage > totalPages) currentPage = totalPages;
-  if (currentPage < 1) currentPage = 1;
-
-  const startIndex = (currentPage - 1) * ROWS_PER_PAGE;
-  const endIndex = Math.min(startIndex + ROWS_PER_PAGE, totalRows);
-  const currentSlice = allQuestions.slice(startIndex, endIndex);
-
   tableBody.innerHTML = '';
 
-  if (currentSlice.length === 0) {
-    tableBody.innerHTML = `
-      <tr>
-        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 32px 16px;">
-          No questions yet. Click <strong>+ Add Question</strong> to get started.
-        </td>
-      </tr>
-    `;
-  } else {
-    currentSlice.forEach((q, index) => {
+  if (allQuestions.length > 0) {
+    allQuestions.forEach((q, index) => {
       const tr = document.createElement('tr');
       tr.dataset.id = q.id;
 
@@ -132,7 +110,7 @@ function renderQuestions() {
       }
 
       tr.innerHTML = `
-        <td class="text-left">${startIndex + index + 1}</td>
+        <td class="text-left">${index + 1}</td>
         <th scope="row" class="text-left">${escapeHtml(q.text)}</th>
         <td class="text-left">
           <span class="type-badge">${TYPE_LABELS[q.type] || escapeHtml(q.type)}</span>
@@ -150,16 +128,8 @@ function renderQuestions() {
     });
   }
 
-  // Update table pagination UI
-  paginationInfo.textContent = totalRows > 0
-    ? `Showing ${startIndex + 1}-${endIndex} of ${totalRows}`
-    : `Showing 0 of 0`;
-  currentPageBadge.textContent = `${currentPage} / ${totalPages}`;
-
-  firstBtn.disabled = currentPage === 1;
-  prevBtn.disabled = currentPage === 1;
-  nextBtn.disabled = currentPage === totalPages;
-  lastBtn.disabled = currentPage === totalPages;
+  // Initialize DataTables for Questions with search, filter, sort, and persistence
+  initQuestionsDataTable(surveyId, '#questionsTable');
 }
 
 function onQuestionsUpdated() {
@@ -168,34 +138,6 @@ function onQuestionsUpdated() {
     renderPreviewContent(surveyId);
   }
 }
-
-// ─── Table Pagination Listeners ────────────────────────────────────────────────
-firstBtn?.addEventListener('click', () => {
-  currentPage = 1;
-  renderQuestions();
-});
-
-prevBtn?.addEventListener('click', () => {
-  if (currentPage > 1) {
-    currentPage--;
-    renderQuestions();
-  }
-});
-
-nextBtn?.addEventListener('click', () => {
-  const survey = getSurveyById(surveyId);
-  const totalPages = Math.max(1, Math.ceil((survey?.questions?.length || 0) / ROWS_PER_PAGE));
-  if (currentPage < totalPages) {
-    currentPage++;
-    renderQuestions();
-  }
-});
-
-lastBtn?.addEventListener('click', () => {
-  const survey = getSurveyById(surveyId);
-  currentPage = Math.max(1, Math.ceil((survey?.questions?.length || 0) / ROWS_PER_PAGE));
-  renderQuestions();
-});
 
 // ─── Modal Actions ─────────────────────────────────────────────────────────────
 openCreateBtn?.addEventListener('click', () => {
@@ -240,7 +182,6 @@ initSurveyNavigation({
   getCurrentSurveyId: () => surveyId,
   onSurveyChange: (newSurveyId) => {
     surveyId = newSurveyId;
-    currentPage = 1;
     renderQuestions();
     if (isSurveyPreviewOpen()) {
       renderPreviewContent(surveyId);
