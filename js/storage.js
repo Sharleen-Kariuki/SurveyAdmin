@@ -1,425 +1,99 @@
+import { mockSurveys } from './mockData.js';
+import { sanitizeText, validateCsrfToken, containsXss } from './utils.js';
+
 const STORAGE_KEY = 'surveys_db';
+const SEED_VERSION_KEY = 'surveys_faker_version';
+const CURRENT_VERSION = 'faker_v5_strict_dates';
 
-export const defaultSurveys = [
-  {
-    id: '1',
-    title: 'Hal Gibrah',
-    description: 'Scientific Calculator & Computational Suite Usability Survey',
-    responses: 245,
-    status: 'Active',
-    createdAt: '2024',
-    updatedAt: '2026',
-    questions: [
-      {
-        id: '101',
-        text: 'How frequently do you use scientific calculation tools in your workflow?',
-        type: 'radio',
-        options: ['Daily', 'Several times a week', 'Once a month', 'Rarely'],
-        required: true
-      },
-      {
-        id: '102',
-        text: 'Rate the interface responsiveness and calculation engine speed',
-        type: 'rating',
-        rangeMin: 1,
-        rangeMax: 5,
-        rangeStep: 1,
-        required: true
-      },
-      {
-        id: '103',
-        text: 'Net Promoter Score: How likely are you to recommend our tool to a colleague? (1-10)',
-        type: 'scale',
-        rangeMin: 1,
-        rangeMax: 10,
-        rangeStep: 1,
-        required: true
-      },
-      {
-        id: '104',
-        text: 'Preferred floating-point decimal precision level',
-        type: 'range',
-        rangeMin: 2,
-        rangeMax: 32,
-        rangeStep: 2,
-        required: true
-      },
-      {
-        id: '105',
-        text: 'Rate the matrix & linear algebra solver usability',
-        type: 'rating',
-        rangeMin: 1,
-        rangeMax: 5,
-        rangeStep: 1,
-        required: false
-      },
-      {
-        id: '106',
-        text: 'Estimated weekly calculation workload (hours)',
-        type: 'range',
-        rangeMin: 1,
-        rangeMax: 50,
-        rangeStep: 1,
-        required: false
-      },
-      {
-        id: '107',
-        text: 'Do you require automated LaTeX mathematical syntax export?',
-        type: 'boolean',
-        required: true
-      },
-      {
-        id: '108',
-        text: 'Which equation export formats do you actively utilize?',
-        type: 'checkbox',
-        options: ['LaTeX', 'MathML', 'Plain CSV', 'JSON Schema', 'SVG Render'],
-        required: false
-      },
-      {
-        id: '109',
-        text: 'What additional scientific algorithms or functions would help your daily research?',
-        type: 'textarea',
-        required: false
-      }
-    ]
-  },
-  {
-    id: '2',
-    title: 'Cathy Terr',
-    description: 'Municipal Waste Disposal & Environmental Sustainability Audit',
-    responses: 312,
-    status: 'Inactive',
-    createdAt: '2023',
-    updatedAt: '2025',
-    questions: [
-      {
-        id: '201',
-        text: 'Is recyclable waste collected on the designated schedule in your sector?',
-        type: 'boolean',
-        required: true
-      },
-      {
-        id: '202',
-        text: 'Rate overall municipal recycling efficiency and service responsiveness (1-10)',
-        type: 'scale',
-        rangeMin: 1,
-        rangeMax: 10,
-        rangeStep: 1,
-        required: true
-      },
-      {
-        id: '203',
-        text: 'Rate community compost and organic waste facility accessibility',
-        type: 'rating',
-        rangeMin: 1,
-        rangeMax: 5,
-        rangeStep: 1,
-        required: true
-      },
-      {
-        id: '204',
-        text: 'Estimated percentage of household waste diverted from landfill',
-        type: 'range',
-        rangeMin: 0,
-        rangeMax: 100,
-        rangeStep: 5,
-        required: false
-      },
-      {
-        id: '205',
-        text: 'Select all waste categories segregated at your residence',
-        type: 'checkbox',
-        options: ['Plastics', 'Glass', 'Paper & Cardboard', 'Electronic Waste', 'Hazardous Chemicals'],
-        required: false
-      },
-      {
-        id: '206',
-        text: 'Neighborhood collection frequency preference (times per week)',
-        type: 'range',
-        rangeMin: 1,
-        rangeMax: 7,
-        rangeStep: 1,
-        required: false
-      },
-      {
-        id: '207',
-        text: 'Upload an image of your local sorting station or container cleanliness',
-        type: 'file',
-        required: false
-      }
-    ]
-  },
-  {
-    id: '3',
-    title: 'Lou Minious',
-    description: 'Smart Lighting & Energy Conservation Study',
-    responses: 88,
-    status: 'Pending',
-    createdAt: '2024',
-    updatedAt: '2026',
-    questions: [
-      {
-        id: '301',
-        text: 'Overall satisfaction with smart bulb brightness and color accuracy',
-        type: 'rating',
-        rangeMin: 1,
-        rangeMax: 5,
-        rangeStep: 1,
-        required: true
-      },
-      {
-        id: '302',
-        text: 'Preferred evening indoor color temperature in Kelvin',
-        type: 'range',
-        rangeMin: 2000,
-        rangeMax: 6500,
-        rangeStep: 100,
-        required: true
-      },
-      {
-        id: '303',
-        text: 'Likelihood of expanding smart illumination to additional rooms (1-10)',
-        type: 'scale',
-        rangeMin: 1,
-        rangeMax: 10,
-        rangeStep: 1,
-        required: true
-      },
-      {
-        id: '304',
-        text: 'Motion sensor auto-dimming timeout threshold (minutes)',
-        type: 'range',
-        rangeMin: 1,
-        rangeMax: 60,
-        rangeStep: 1,
-        required: false
-      },
-      {
-        id: '305',
-        text: 'Does the ambient light sensor trigger reliably at sunset?',
-        type: 'boolean',
-        required: true
-      },
-      {
-        id: '306',
-        text: 'Primary smart home voice assistant ecosystem',
-        type: 'select',
-        options: ['Apple HomeKit', 'Google Home', 'Amazon Alexa', 'Home Assistant', 'None'],
-        required: false
-      }
-    ]
-  },
-  {
-    id: '4',
-    title: 'Apex Velocity',
-    description: 'Cloud Infrastructure & High-Frequency API Performance Benchmark',
-    responses: 540,
-    status: 'Active',
-    createdAt: '2024',
-    updatedAt: '2026',
-    questions: [
-      {
-        id: '401',
-        text: 'Rate global edge API response latency satisfaction (1-10)',
-        type: 'scale',
-        rangeMin: 1,
-        rangeMax: 10,
-        rangeStep: 1,
-        required: true
-      },
-      {
-        id: '402',
-        text: 'Overall platform uptime and failover reliability rating',
-        type: 'rating',
-        rangeMin: 1,
-        rangeMax: 5,
-        rangeStep: 1,
-        required: true
-      },
-      {
-        id: '403',
-        text: 'Desired auto-scaling maximum container instances',
-        type: 'range',
-        rangeMin: 2,
-        rangeMax: 100,
-        rangeStep: 2,
-        required: true
-      },
-      {
-        id: '404',
-        text: 'Target memory allocation buffer per microservice (GB)',
-        type: 'range',
-        rangeMin: 4,
-        rangeMax: 128,
-        rangeStep: 4,
-        required: false
-      },
-      {
-        id: '405',
-        text: 'Is zero-downtime blue/green deployment mandatory for your production cluster?',
-        type: 'boolean',
-        required: true
-      }
-    ]
-  },
-  {
-    id: '5',
-    title: 'Nova Health',
-    description: 'Workplace Ergonomics & Employee Wellness Index',
-    responses: 1420,
-    status: 'Active',
-    createdAt: '2025',
-    updatedAt: '2026',
-    questions: [
-      {
-        id: '501',
-        text: 'Daily physical activity or standing desk duration (minutes)',
-        type: 'range',
-        rangeMin: 15,
-        rangeMax: 180,
-        rangeStep: 15,
-        required: true
-      },
-      {
-        id: '502',
-        text: 'Work-life balance and mental health satisfaction level',
-        type: 'rating',
-        rangeMin: 1,
-        rangeMax: 5,
-        rangeStep: 1,
-        required: true
-      },
-      {
-        id: '503',
-        text: 'Likelihood to participate in weekly corporate wellness workshops (1-10)',
-        type: 'scale',
-        rangeMin: 1,
-        rangeMax: 10,
-        rangeStep: 1,
-        required: true
-      },
-      {
-        id: '504',
-        text: 'Preferred remote working days per work week',
-        type: 'range',
-        rangeMin: 0,
-        rangeMax: 5,
-        rangeStep: 1,
-        required: false
-      }
-    ]
-  },
-  {
-    id: '6',
-    title: 'Pulse Retail',
-    description: 'Omnichannel In-Store Shopping Experience Feedback',
-    responses: 890,
-    status: 'Inactive',
-    createdAt: '2023',
-    updatedAt: '2025',
-    questions: [
-      {
-        id: '601',
-        text: 'Speed and convenience of contactless self-checkout (1-10)',
-        type: 'scale',
-        rangeMin: 1,
-        rangeMax: 10,
-        rangeStep: 1,
-        required: true
-      },
-      {
-        id: '602',
-        text: 'Store product availability and aisle layout rating',
-        type: 'rating',
-        rangeMin: 1,
-        rangeMax: 5,
-        rangeStep: 1,
-        required: true
-      },
-      {
-        id: '603',
-        text: 'Acceptable maximum promotional SMS / Email frequency per month',
-        type: 'range',
-        rangeMin: 1,
-        rangeMax: 12,
-        rangeStep: 1,
-        required: false
-      }
-    ]
-  },
-  {
-    id: '7',
-    title: 'Zenith Fintech',
-    description: 'Mobile Banking Security & Biometric UX Survey',
-    responses: 3100,
-    status: 'Active',
-    createdAt: '2025',
-    updatedAt: '2026',
-    questions: [
-      {
-        id: '701',
-        text: 'Ease of biometric face / fingerprint authentication',
-        type: 'rating',
-        rangeMin: 1,
-        rangeMax: 5,
-        rangeStep: 1,
-        required: true
-      },
-      {
-        id: '702',
-        text: 'Confidence in multi-factor transaction security (1-10)',
-        type: 'scale',
-        rangeMin: 1,
-        rangeMax: 10,
-        rangeStep: 1,
-        required: true
-      },
-      {
-        id: '703',
-        text: 'Instant push-notification threshold for single transaction ($)',
-        type: 'range',
-        rangeMin: 25,
-        rangeMax: 1500,
-        rangeStep: 25,
-        required: true
-      },
-      {
-        id: '704',
-        text: 'Would you utilize AI-assisted recurring bill optimization?',
-        type: 'boolean',
-        required: false
-      }
-    ]
+export function formatFullDate(d = new Date()) {
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+export function toFullDate(val, fallbackYear = '2024', index = 1) {
+  if (!val) return `15/06/${fallbackYear}`;
+  const str = String(val).trim();
+  // If already valid DD/MM/YYYY
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
+    return str;
   }
-];
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) {
+    const parts = str.split('/');
+    return `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
+  }
+  // If legacy standalone 4-digit year, convert to full DD/MM/YYYY pattern
+  if (/^\d{4}$/.test(str)) {
+    const day = String(((index * 7) % 28) + 1).padStart(2, '0');
+    const month = String(((index * 3) % 12) + 1).padStart(2, '0');
+    return `${day}/${month}/${str}`;
+  }
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    return formatFullDate(parsed);
+  }
+  return `15/06/${fallbackYear}`;
+}
 
-// getSurveys function is used to retrieve the surveys from the local storage.
+export const defaultSurveys = mockSurveys.map((s, idx) => ({
+  ...s,
+  createdAt: toFullDate(s.createdAt, '2024', idx + 1),
+  updatedAt: toFullDate(s.updatedAt, '2026', idx + 3)
+}));
+
+// Resets or replaces localStorage surveys with generated mock data
+export function resetToMockData(customSurveys = null) {
+  const data = customSurveys || defaultSurveys;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  localStorage.setItem(SEED_VERSION_KEY, CURRENT_VERSION);
+  return data;
+}
+
+// Retrieves surveys from localStorage; dynamically seeds with mockSurveys if empty or outdated
 export function getSurveys() {
+  const currentSeed = localStorage.getItem(SEED_VERSION_KEY);
   const data = localStorage.getItem(STORAGE_KEY);
-  // if nothing is stored it seeds localStorage with defaultSurveys and returns the defaultSurveys.
-  if (!data) {
+
+  // If never seeded or version outdated, dynamically seed with full-date defaultSurveys
+  if (!data || currentSeed !== CURRENT_VERSION) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultSurveys));
+    localStorage.setItem(SEED_VERSION_KEY, CURRENT_VERSION);
     return defaultSurveys;
   }
+
   try {
-    // checks if stored data is an array and it its empty and then resets localStorage to defaultSurvey and returns them.
     const parsed = JSON.parse(data);
     if (!Array.isArray(parsed) || parsed.length === 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultSurveys));
+      localStorage.setItem(SEED_VERSION_KEY, CURRENT_VERSION);
       return defaultSurveys;
     }
 
-    // Auto-enrich existing data if default surveys are missing rich question sets
+    // Ensure all surveys have string IDs, previewColumns, and full dates
     let needsUpdate = false;
-    parsed.forEach((s) => {
+    parsed.forEach((s, idx) => {
+      if (typeof s.id !== 'string') {
+        s.id = String(s.id);
+        needsUpdate = true;
+      }
       if (!s.previewColumns) {
         s.previewColumns = 2;
         needsUpdate = true;
       }
+      if (/^\d{4}$/.test(s.createdAt)) {
+        s.createdAt = toFullDate(s.createdAt, '2024', idx + 1);
+        needsUpdate = true;
+      }
+      if (/^\d{4}$/.test(s.updatedAt)) {
+        s.updatedAt = toFullDate(s.updatedAt, '2026', idx + 3);
+        needsUpdate = true;
+      }
     });
 
+    // Auto-enrich any surveys missing from mockSurveys
     defaultSurveys.forEach((defSurvey) => {
-      const existing = parsed.find((s) => s.id === defSurvey.id);
+      const existing = parsed.find((s) => String(s.id) === String(defSurvey.id));
       if (!existing) {
         parsed.push(defSurvey);
         needsUpdate = true;
@@ -436,6 +110,7 @@ export function getSurveys() {
     return parsed;
   } catch (e) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultSurveys));
+    localStorage.setItem(SEED_VERSION_KEY, CURRENT_VERSION);
     return defaultSurveys;
   }
 }
@@ -446,17 +121,36 @@ export function saveSurveys(surveys) {
 }
 
 // Deletes a survey from local storage based on the provided survey ID.
-export function deleteSurveyById(id) {
+export function deleteSurveyById(id, csrfToken = null) {
+  if (csrfToken !== null && !validateCsrfToken(csrfToken)) {
+    console.error('[Security] Blocked unauthorized deletion: Invalid CSRF token.');
+    return;
+  }
   const surveys = getSurveys().filter(s => String(s.id) !== String(id));
   saveSurveys(surveys);
 }
 
-
 // Saves or updates a survey in local storage. If the surveyData contains an id, it updates the existing survey; otherwise, it creates a new survey with a unique id.
 export function saveOrUpdateSurvey(surveyData) {
+  if (surveyData.csrfToken && !validateCsrfToken(surveyData.csrfToken)) {
+    console.error('[Security] Blocked unauthorized save: Invalid CSRF token.');
+    return null;
+  }
+
+  // Reject saves containing unsafe XSS payloads
+  if (containsXss(surveyData.title) || containsXss(surveyData.description)) {
+    console.error('[Security] Blocked survey save: Title or description contains disallowed script/HTML content.');
+    return null;
+  }
+
   const surveys = getSurveys();
-  const currentYear = new Date().getFullYear().toString();
+  const currentDate = formatFullDate();
   const previewColumns = Math.max(1, Math.min(3, parseInt(surveyData.previewColumns, 10) || 2));
+
+  // Sanitize text fields to neutralize any XSS payloads
+  const cleanTitle = sanitizeText(surveyData.title);
+  const cleanDescription = sanitizeText(surveyData.description);
+  const cleanStatus = ['Active', 'Inactive', 'Pending'].includes(surveyData.status) ? surveyData.status : 'Active';
 
   if (surveyData.id) {
     // Edit existing
@@ -464,11 +158,11 @@ export function saveOrUpdateSurvey(surveyData) {
     if (index !== -1) {
       surveys[index] = {
         ...surveys[index],
-        title: surveyData.title,
-        description: surveyData.description,
-        status: surveyData.status,
+        title: cleanTitle,
+        description: cleanDescription,
+        status: cleanStatus,
         previewColumns,
-        updatedAt: currentYear
+        updatedAt: currentDate
       };
       saveSurveys(surveys);
       return surveyData.id;
@@ -479,14 +173,14 @@ export function saveOrUpdateSurvey(surveyData) {
   const newId = Date.now().toString();
   surveys.push({
     id: newId,
-    title: surveyData.title,
-    description: surveyData.description,
-    status: surveyData.status,
+    title: cleanTitle,
+    description: cleanDescription,
+    status: cleanStatus,
     previewColumns,
     responses: 0,
     questions: [],
-    createdAt: currentYear,
-    updatedAt: currentYear
+    createdAt: currentDate,
+    updatedAt: currentDate
   });
 
   saveSurveys(surveys);
@@ -499,6 +193,17 @@ export function getSurveyById(id) {
 }
 
 export function saveQuestion(surveyId, questionData) {
+  if (questionData.csrfToken && !validateCsrfToken(questionData.csrfToken)) {
+    console.error('[Security] Blocked unauthorized question save: Invalid CSRF token.');
+    return null;
+  }
+
+  // Reject saves containing unsafe XSS payloads
+  if (containsXss(questionData.text) || (Array.isArray(questionData.options) && questionData.options.some((opt) => containsXss(opt)))) {
+    console.error('[Security] Blocked question save: Question text or choices contain disallowed script/HTML content.');
+    return null;
+  }
+
   const surveys = getSurveys();
   const survey = surveys.find((s) => String(s.id) === String(surveyId));
   if (!survey) return null;
@@ -507,21 +212,28 @@ export function saveQuestion(surveyId, questionData) {
     survey.questions = [];
   }
 
-  const currentYear = new Date().getFullYear().toString();
-  survey.updatedAt = currentYear;
+  const currentDate = formatFullDate();
+  survey.updatedAt = currentDate;
+
+  // Sanitize question inputs
+  const cleanQuestion = {
+    ...questionData,
+    text: sanitizeText(questionData.text),
+    options: Array.isArray(questionData.options) ? questionData.options.map(opt => sanitizeText(opt)) : []
+  };
 
   let savedId = questionData.id;
   if (questionData.id) {
     // Edit existing question
     const index = survey.questions.findIndex((q) => String(q.id) === String(questionData.id));
     if (index !== -1) {
-      survey.questions[index] = { ...survey.questions[index], ...questionData };
+      survey.questions[index] = { ...survey.questions[index], ...cleanQuestion };
     }
   } else {
     // Add new question
     savedId = Date.now().toString();
     survey.questions.push({
-      ...questionData,
+      ...cleanQuestion,
       id: savedId,
     });
   }
@@ -531,14 +243,17 @@ export function saveQuestion(surveyId, questionData) {
 }
 
 // Deletes a question from a survey based on the provided survey ID and question ID.
-export function deleteQuestion(surveyId, questionId) {
+export function deleteQuestion(surveyId, questionId, csrfToken = null) {
+  if (csrfToken !== null && !validateCsrfToken(csrfToken)) {
+    console.error('[Security] Blocked unauthorized question deletion: Invalid CSRF token.');
+    return;
+  }
+
   const surveys = getSurveys();
   const survey = surveys.find((s) => String(s.id) === String(surveyId));
   if (!survey || !survey.questions) return;
 
-  const currentYear = new Date().getFullYear().toString();
-  survey.updatedAt = currentYear;
-
+  survey.updatedAt = formatFullDate();
   survey.questions = survey.questions.filter((q) => String(q.id) !== String(questionId));
   saveSurveys(surveys);
 }

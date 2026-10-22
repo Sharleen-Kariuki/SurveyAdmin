@@ -1,6 +1,6 @@
 // Manages the Survey Preview Modal, Question Card Rendering, and Live Validation
 import { getSurveys, getSurveyById } from './storage.js';
-import { escapeHtml, TYPE_LABELS, getMetaHtml, setupDialogClose } from './utils.js';
+import { escapeHtml, TYPE_LABELS, getMetaHtml, setupDialogClose, setFieldValidation, clearFieldValidation, clearAllValidationErrors, containsXss, XSS_ERROR_MESSAGE } from './utils.js';
 
 // DOM Elements
 const surveyPreviewDialog = document.getElementById('surveyPreviewDialog');
@@ -374,21 +374,54 @@ export function validateQuestionCard(card) {
   let errorMessage = '';
   let controlToHighlight = null;
 
-  if (qType === 'text' || qType === 'textarea' || qType === 'email' || qType === 'number' || qType === 'date' || qType === 'select') {
+  if (qType === 'text' || qType === 'textarea' || qType === 'select') {
     const input = card.querySelector('.preview-input');
     controlToHighlight = input;
     const val = input ? input.value.trim() : '';
 
     if (isRequired && !val) {
       errorMessage = getRequiredErrorMessage(card, qType);
-    } else if (val && qType === 'email') {
+    } else if (val && containsXss(val)) {
+      errorMessage = XSS_ERROR_MESSAGE;
+    }
+  } else if (qType === 'email') {
+    const input = card.querySelector('.preview-input');
+    controlToHighlight = input;
+    const val = input ? input.value.trim() : '';
+
+    if (isRequired && !val) {
+      errorMessage = getRequiredErrorMessage(card, qType);
+    } else if (val && containsXss(val)) {
+      errorMessage = XSS_ERROR_MESSAGE;
+    } else if (val) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(val)) {
         errorMessage = 'Please enter a valid email address (e.g. name@example.com).';
       }
-    } else if (val && qType === 'number') {
+    }
+  } else if (qType === 'number') {
+    const input = card.querySelector('.preview-input');
+    controlToHighlight = input;
+    const val = input ? input.value.trim() : '';
+
+    if (isRequired && !val) {
+      errorMessage = getRequiredErrorMessage(card, qType);
+    } else if (val) {
       if (isNaN(Number(val))) {
         errorMessage = 'Please enter a valid number.';
+      }
+    }
+  } else if (qType === 'date') {
+    const input = card.querySelector('.preview-input');
+    controlToHighlight = input;
+    const val = input ? input.value.trim() : '';
+
+    if (isRequired && !val) {
+      errorMessage = getRequiredErrorMessage(card, qType);
+    } else if (val) {
+      const d = new Date(val);
+      if (isNaN(d.getTime())) {
+        errorMessage = 'Please enter a valid date.';
       }
     }
   } else if (qType === 'radio') {
@@ -412,6 +445,17 @@ export function validateQuestionCard(card) {
     if (isRequired && (!hidden || !hidden.value)) {
       errorMessage = getRequiredErrorMessage(card, qType);
     }
+  } else if (qType === 'range') {
+    const slider = card.querySelector('.preview-range-slider');
+    controlToHighlight = slider;
+    if (slider) {
+      const val = parseFloat(slider.value);
+      const min = parseFloat(slider.min);
+      const max = parseFloat(slider.max);
+      if (isNaN(val) || val < min || val > max) {
+        errorMessage = `Value must be between ${min} and ${max}.`;
+      }
+    }
   } else if (qType === 'boolean') {
     const boolGroup = card.querySelector('.preview-boolean-group');
     controlToHighlight = boolGroup;
@@ -424,6 +468,11 @@ export function validateQuestionCard(card) {
     controlToHighlight = fileInput;
     if (isRequired && (!fileInput || fileInput.files.length === 0)) {
       errorMessage = getRequiredErrorMessage(card, qType);
+    } else if (fileInput && fileInput.files && fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      if (file.size > 25 * 1024 * 1024) {
+        errorMessage = 'File size exceeds maximum limit of 25MB.';
+      }
     }
   } else {
     // Fallback for default or other input types
@@ -432,42 +481,18 @@ export function validateQuestionCard(card) {
     const val = input ? input.value.trim() : '';
     if (isRequired && !val) {
       errorMessage = getRequiredErrorMessage(card, qType);
+    } else if (val && containsXss(val)) {
+      errorMessage = XSS_ERROR_MESSAGE;
     }
   }
 
-  // Visual error presentation
-  if (errorMessage) {
-    card.classList.add('has-error');
-    if (controlToHighlight) {
-      controlToHighlight.classList.add('is-invalid');
-    }
-    const input = card.querySelector('.preview-input');
-    if (input) {
-      input.classList.add('is-invalid');
-    }
-    if (errorContainer) {
-      errorContainer.innerHTML = `
-        <div class="preview-validation-error" role="alert">
-          <img src="./assets/exclamation.png" alt="Validation error" class="alert-icon-img" />
-          <span>${escapeHtml(errorMessage)}</span>
-        </div>
-      `;
-    }
-    return false;
-  } else {
-    card.classList.remove('has-error');
-    if (controlToHighlight) {
-      controlToHighlight.classList.remove('is-invalid');
-    }
-    const input = card.querySelector('.preview-input');
-    if (input) {
-      input.classList.remove('is-invalid');
-    }
-    if (errorContainer) {
-      errorContainer.innerHTML = '';
-    }
-    return true;
-  }
+  // Use standardized field validation engine
+  return setFieldValidation({
+    formGroup: card,
+    control: controlToHighlight,
+    errorContainer,
+    errorMessage
+  });
 }
 
 // ─── Render Preview Modal Content ─────────────────────────────────────────────
@@ -615,6 +640,7 @@ if (previewValidateBtn) {
 
 if (previewResetBtn) {
   previewResetBtn.addEventListener('click', () => {
+    clearAllValidationErrors(previewQuestionsList);
     if (activeSurveyId) {
       renderPreviewContent(activeSurveyId);
     }

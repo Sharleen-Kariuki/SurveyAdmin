@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta name="description" content="Admin Side of the Survey Application.">
     <title>Admin Dashboard - Survey Management System</title>
 
@@ -18,6 +20,58 @@
     <meta property="og:image:height" content="630">
 
 
+    <!-- Synchronous Theme Application: Runs BEFORE first paint to eliminate theme FOUC -->
+    <script>
+      (function() {
+        try {
+          var savedTheme = localStorage.getItem('surveyAdminThemeId') || 'burgundy';
+          var themes = {
+            navy: {
+              '--burgundy': 'hsl(222, 70%, 21%)',
+              '--burgundy-gradient': 'linear-gradient(135deg, hsl(222, 72%, 24%) 0%, hsl(222, 75%, 17%) 100%)',
+              '--burgundy-border': 'hsl(222, 50%, 30%)',
+              '--primary': 'hsl(217, 91%, 55%)',
+              '--primary-hover': 'hsl(217, 91%, 45%)',
+              '--primary-light': 'hsla(217, 91%, 55%, 0.12)',
+              '--primary-border': 'hsl(217, 91%, 60%)',
+              '--border-focus': 'hsl(217, 91%, 55%)',
+              '--table-row-hover': 'hsl(217, 65%, 94%)',
+              '--focus-ring': 'hsla(217, 91%, 55%, 0.2)',
+              '--hero-subtext': 'hsl(217, 30%, 88%)',
+              '--hero-link': 'hsl(217, 95%, 88%)',
+              '--hero-input-bg': 'hsl(222, 60%, 18%)',
+              '--hover-burgundy': 'hsl(222, 70%, 21%)'
+            },
+            emerald: {
+              '--burgundy': 'hsl(164, 85%, 16%)',
+              '--burgundy-gradient': 'linear-gradient(135deg, hsl(164, 80%, 19%) 0%, hsl(164, 90%, 13%) 100%)',
+              '--burgundy-border': 'hsl(164, 50%, 25%)',
+              '--primary': 'hsl(160, 84%, 39%)',
+              '--primary-hover': 'hsl(160, 84%, 31%)',
+              '--primary-light': 'hsla(160, 84%, 39%, 0.12)',
+              '--primary-border': 'hsl(160, 84%, 44%)',
+              '--border-focus': 'hsl(160, 84%, 39%)',
+              '--table-row-hover': 'hsl(160, 50%, 94%)',
+              '--focus-ring': 'hsla(160, 84%, 39%, 0.2)',
+              '--hero-subtext': 'hsl(164, 30%, 88%)',
+              '--hero-link': 'hsl(164, 90%, 88%)',
+              '--hero-input-bg': 'hsl(164, 75%, 14%)',
+              '--hover-burgundy': 'hsl(164, 85%, 16%)'
+            }
+          };
+          if (themes[savedTheme]) {
+            var root = document.documentElement;
+            for (var k in themes[savedTheme]) {
+              root.style.setProperty(k, themes[savedTheme][k]);
+            }
+          }
+        } catch(e) {}
+      })();
+    </script>
+
+    <!-- Preload primary font to eliminate Font FOUC / FOIT -->
+    <link rel="preload" href="./fonts/Montserrat-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+
     <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
     <!-- Link to Stylesheet -->
     <link rel="stylesheet" href="./index.css">
@@ -25,11 +79,11 @@
     <!-- Link to DataTables CSS -->
     <link rel="stylesheet" href="DataTables/datatables.min.css">
 
-    <!-- DataTables Library JS -->
-    <script src="DataTables/datatables.min.js"></script>
-
     <!-- Theme Manager -->
     <script type="module" src="js/theme.js"></script>
+
+    <!-- DataTables Library JS -->
+    <script src="DataTables/datatables.min.js"></script>
 </head>
 <body>
     <main class="container">
@@ -67,109 +121,127 @@
       <div class="dt-toolbar" id="tableToolbar">
         <div class="toolbar-tabs" role="tablist" aria-label="Table management tools">
           
-          <!-- Live Global Search Input -->
-          <div class="toolbar-search-box">
-            <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input type="text" id="globalSearchInput" class="toolbar-search-input" placeholder="Search surveys..." aria-label="Search surveys" autocomplete="off" />
-            <button type="button" class="btn-clear-search" id="btnClearGlobalSearch" aria-label="Clear search" title="Clear search" hidden>&times;</button>
+          <!-- Inline Non-Global Search (Column, Relationship, Value, and Search Button) -->
+          <div class="toolbar-inline-search-wrap">
+            <div class="toolbar-inline-search" id="inlineSearchBox" role="search" aria-label="Inline table search">
+              <div class="inline-search-field">
+                <label for="inlineSearchColumnSelect" class="sr-only">Column</label>
+                <select id="inlineSearchColumnSelect" class="toolbar-inline-select" aria-label="Search Column">
+                  <option value="all">All Columns</option>
+                  <option value="0">Title</option>
+                  <option value="1">Description</option>
+                  <option value="2">Responses</option>
+                  <option value="3">Status</option>
+                  <option value="4">Created_at</option>
+                  <option value="5">Updated_at</option>
+                </select>
+              </div>
+              <div class="inline-search-field">
+                <label for="inlineSearchRelationSelect" class="sr-only">Relationship</label>
+                <select id="inlineSearchRelationSelect" class="toolbar-inline-select" aria-label="Search Relationship">
+                  <option value="contains" selected>Contains</option>
+                  <option value="equals">Equals (=)</option>
+                  <option value="not_equals">Not equals (&ne;)</option>
+                  <option value="starts_with">Starts with</option>
+                  <option value="ends_with">Ends with</option>
+                  <option value="gt">&gt; (after)</option>
+                  <option value="lt">&lt; (before)</option>
+                  <option value="gte">&ge; (on/after)</option>
+                  <option value="lte">&le; (on/before)</option>
+                </select>
+              </div>
+              <div class="inline-search-input-wrapper">
+                <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="inlineSearchValueInput" class="toolbar-inline-input" placeholder="Search value..." aria-label="Search value" autocomplete="off" />
+                <button type="button" class="btn-clear-inline-search" id="btnClearInlineSearch" aria-label="Clear search" title="Clear search" hidden>&times;</button>
+              </div>
+              <button type="button" class="btn-inline-search" id="btnInlineSearch" title="Execute Search">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <span>Search</span>
+              </button>
+            </div>
+            <div class="error-container inline-search-error-container" id="inlineSearchErrorContainer"></div>
           </div>
 
-          <!-- Filter Dropdown Tab -->
+          <!-- Filter Dropdown Tab (Multiple Filters Supported) -->
           <div class="toolbar-dropdown-wrapper">
             <button type="button" class="toolbar-tab-btn" id="tabBtnFilter" aria-expanded="false" aria-controls="dropdownFilter">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
               </svg>
               <span>Filter</span>
+              <span class="tab-badge" id="filterBadge" hidden>0</span>
               <span class="tab-indicator" id="filterIndicator" hidden></span>
               <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
             </button>
 
-            <div class="toolbar-dropdown-panel" id="dropdownFilter" role="region" aria-label="Filter controls">
+            <div class="toolbar-dropdown-panel dropdown-panel-wide" id="dropdownFilter" role="region" aria-label="Filter controls">
               <div class="dropdown-header">
-                <h3>Filter by Condition</h3>
+                <div class="dropdown-header-title">
+                  <h3>Filter by Conditions</h3>
+                  <span class="dropdown-subtitle">Match all active criteria</span>
+                </div>
                 <button type="button" class="btn-close-dropdown" aria-label="Close filter dropdown">&times;</button>
               </div>
               <div class="dropdown-body">
-                <div class="dropdown-form-group">
-                  <label for="filterColumnSelect">Column</label>
-                  <select id="filterColumnSelect" class="toolbar-select">
-                    <option value="all">All Columns</option>
-                    <option value="0">Title</option>
-                    <option value="1">Description</option>
-                    <option value="2">Responses</option>
-                    <option value="3">Status</option>
-                    <option value="4">Created_at</option>
-                    <option value="5">Updated_at</option>
-                  </select>
+                <div id="filterRulesList" class="rules-list-container">
+                  <!-- Dynamic multiple filter rows injected here -->
                 </div>
-                <div class="dropdown-form-group">
-                  <label for="filterRelationSelect">Relationship</label>
-                  <select id="filterRelationSelect" class="toolbar-select">
-                    <option value="contains" selected>Contains</option>
-                    <option value="equals">Equals</option>
-                    <option value="not_equals">Does not equal</option>
-                    <option value="starts_with">Starts with</option>
-                    <option value="ends_with">Ends with</option>
-                    <option value="gt">Greater than (&gt;)</option>
-                    <option value="lt">Less than (&lt;)</option>
-                    <option value="gte">Greater than or equal (&gt;=)</option>
-                    <option value="lte">Less than or equal (&lt;=)</option>
-                  </select>
-                </div>
-                <div class="dropdown-form-group">
-                  <label for="filterValueInput">Value</label>
-                  <input type="text" id="filterValueInput" class="toolbar-input" placeholder="Type filter value..." />
-                </div>
+                <button type="button" id="btnAddFilterRule" class="btn-add-rule">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  <span>Add Filter Condition</span>
+                </button>
               </div>
               <div class="dropdown-footer">
-                <button type="button" class="btn-secondary btn-sm" id="btnResetFilter">Reset</button>
-                <button type="button" class="btn-primary btn-sm" id="btnApplyFilter">Apply Filter</button>
+                <button type="button" class="btn-secondary btn-sm" id="btnResetFilter">Reset All</button>
+                <button type="button" class="btn-primary btn-sm" id="btnApplyFilter">Apply Filters</button>
               </div>
             </div>
           </div>
 
-          <!-- Sort Dropdown Tab -->
+          <!-- Sort Dropdown Tab (Multiple Sort Levels Supported) -->
           <div class="toolbar-dropdown-wrapper">
             <button type="button" class="toolbar-tab-btn" id="tabBtnSort" aria-expanded="false" aria-controls="dropdownSort">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
               </svg>
               <span>Sort</span>
+              <span class="tab-badge" id="sortBadge" hidden>0</span>
               <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
             </button>
 
-            <div class="toolbar-dropdown-panel" id="dropdownSort" role="region" aria-label="Sort controls">
+            <div class="toolbar-dropdown-panel dropdown-panel-wide" id="dropdownSort" role="region" aria-label="Sort controls">
               <div class="dropdown-header">
-                <h3>Sort Ordering</h3>
+                <div class="dropdown-header-title">
+                  <h3>Multi-Level Sorting</h3>
+                  <span class="dropdown-subtitle">Set primary and secondary sort orders</span>
+                </div>
                 <button type="button" class="btn-close-dropdown" aria-label="Close sort dropdown">&times;</button>
               </div>
               <div class="dropdown-body">
-                <div class="dropdown-form-group">
-                  <label for="sortColumnSelect">Column</label>
-                  <select id="sortColumnSelect" class="toolbar-select">
-                    <option value="0">Title</option>
-                    <option value="1">Description</option>
-                    <option value="2">Responses</option>
-                    <option value="3">Status</option>
-                    <option value="4" selected>Created_at</option>
-                    <option value="5">Updated_at</option>
-                  </select>
+                <div id="sortRulesList" class="rules-list-container">
+                  <!-- Dynamic multiple sort rows injected here -->
                 </div>
-                <div class="dropdown-form-group">
-                  <label for="sortDirectionSelect">Ordering</label>
-                  <select id="sortDirectionSelect" class="toolbar-select">
-                    <option value="desc" selected>Descending (Z-A / High to Low / Newest)</option>
-                    <option value="asc">Ascending (A-Z / Low to High / Oldest)</option>
-                  </select>
-                </div>
+                <button type="button" id="btnAddSortRule" class="btn-add-rule">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  <span>Add Sort Level</span>
+                </button>
               </div>
               <div class="dropdown-footer">
                 <button type="button" class="btn-secondary btn-sm" id="btnResetSort">Default Sort</button>
@@ -265,8 +337,8 @@
             <th scope="col">Description</th>
             <th scope="col">Responses</th>
             <th scope="col">Status</th>
-            <th scope="col">Created_at</th>
-            <th scope="col">Updated_at</th>
+            <th scope="col" data-type="date">Created_at</th>
+            <th scope="col" data-type="date">Updated_at</th>
             <th scope="col" class="text-right">Actions</th>
           </tr>
         </thead>
@@ -287,6 +359,7 @@
           <button type="button" class="btn-close" data-close-dialog aria-label="Close">&times;</button>
         </div>
   
+        <input type="hidden" name="csrf_token" />
         <input type="hidden" id="surveyId" name="id" />
   
         <div class="form-group" id="surveyTitleGroup">
@@ -301,7 +374,7 @@
           <div class="error-container"></div>
         </div>
   
-        <div class="form-group">
+        <div class="form-group" id="surveyStatusGroup">
           <label for="surveyStatus">Status</label>
           <select id="surveyStatus" name="status">
             <option value="Active">Active</option>
@@ -311,7 +384,7 @@
           <div class="error-container"></div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="surveyPreviewColumnsGroup">
           <label for="surveyPreviewColumns">Preview Columns</label>
           <select id="surveyPreviewColumns" name="previewColumns">
             <option value="1">1 Column</option>

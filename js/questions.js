@@ -1,6 +1,6 @@
 // Main Page Orchestrator for Survey Questions Management
 import { getSurveys, getSurveyById } from './storage.js';
-import { escapeHtml, TYPE_LABELS, CHOICE_TYPES, getMetaHtml } from './utils.js';
+import { escapeHtml, TYPE_LABELS, CHOICE_TYPES, getMetaHtml, initCsrfProtection } from './utils.js';
 import { openQuestionFormModal } from './questionFormModal.js';
 import { openQuestionDeleteModal } from './questionDeleteModal.js';
 import {
@@ -17,25 +17,100 @@ import {
   destroyQuestionsDataTable
 } from './Datatable.js';
 
-// Read ?id= from URL
-const params = new URLSearchParams(window.location.search);
-let surveyId = params.get('id');
+// ─── Extract Survey ID (URL Search, Hash, Regex, or Session Storage Fallback) ───
+function extractSurveyId() {
+  // 1. Primary: Standard query string (?id=...)
+  try {
+    const searchParams = new URLSearchParams(window.location.search);
+    const idFromSearch = searchParams.get('id');
+    if (idFromSearch && idFromSearch.trim() !== '') {
+      return idFromSearch.trim();
+    }
+  } catch (err) {
+    console.warn('[questions.js] Error parsing location.search:', err);
+  }
 
-// Validate and initialize surveyId
+  // 2. Secondary: Hash query parameters (#id=... or #?id=... or #/questions?id=...)
+  try {
+    if (window.location.hash) {
+      const hash = window.location.hash.replace(/^[#/?]+/, '');
+      const hashQuery = hash.includes('?') ? hash.split('?')[1] : hash;
+      const hashParams = new URLSearchParams(hashQuery);
+      const idFromHash = hashParams.get('id');
+      if (idFromHash && idFromHash.trim() !== '') {
+        return idFromHash.trim();
+      }
+      if (/^\d+$/.test(hash)) {
+        return hash.trim();
+      }
+    }
+  } catch (err) {
+    console.warn('[questions.js] Error parsing location.hash:', err);
+  }
+
+  // 3. Tertiary: Regex on full URL (handles clean URLs, redirects, encoded queries)
+  try {
+    const hrefMatch = window.location.href.match(/[?&#]id=([^&#]+)/i);
+    if (hrefMatch && hrefMatch[1]) {
+      return decodeURIComponent(hrefMatch[1]).trim();
+    }
+  } catch (err) {
+    console.warn('[questions.js] Error parsing href regex:', err);
+  }
+
+  // 4. Quaternary: sessionStorage backup (persisted on dashboard click or switcher)
+  try {
+    const storedId = sessionStorage.getItem('current_survey_id');
+    if (storedId && storedId.trim() !== '') {
+      return storedId.trim();
+    }
+  } catch (err) {
+    console.warn('[questions.js] Error reading sessionStorage:', err);
+  }
+
+  return null;
+}
+
 const initialSurveys = getSurveys();
-if (initialSurveys.length === 0) {
+if (!initialSurveys || initialSurveys.length === 0) {
   window.location.href = 'index.html';
-} else {
-  const matched = initialSurveys.find((s) => String(s.id) === String(surveyId));
+}
+
+const params = new URLSearchParams(window.location.search);
+const extractedId = extractSurveyId();
+console.log('🚀 ~ params:', params);
+console.log('🚀 ~ urlId:', params.get('id'));
+console.log('🚀 ~ extractedId:', extractedId);
+
+// Validate extracted ID exists in surveys; fallback to first survey if not found
+let surveyId = null;
+if (extractedId) {
+  const matched = initialSurveys.find((s) => String(s.id) === String(extractedId));
   if (matched) {
-    surveyId = matched.id;
+    surveyId = String(matched.id);
   } else {
-    surveyId = initialSurveys[0].id;
-    const newUrl = new URL(window.location.href);
-    newUrl.searchParams.set('id', surveyId);
-    window.history.replaceState({ surveyId }, '', newUrl.toString());
+    console.warn(`[questions.js] Survey id="${extractedId}" not found in storage. Defaulting to first survey.`);
   }
 }
+
+if (!surveyId && initialSurveys.length > 0) {
+  surveyId = String(initialSurveys[0].id);
+}
+
+// Ensure sessionStorage & browser address bar ?id= are in sync
+try {
+  sessionStorage.setItem('current_survey_id', surveyId);
+  const currentUrl = new URL(window.location.href);
+  if (currentUrl.searchParams.get('id') !== surveyId) {
+    currentUrl.searchParams.set('id', surveyId);
+    window.history.replaceState({ surveyId }, '', currentUrl.toString());
+  }
+} catch (err) {
+  console.warn('[questions.js] Failed syncing URL state:', err);
+}
+
+console.log('🚀 ~ active surveyId:', surveyId);
+
 
 // ─── DOM Elements ─────────────────────────────────────────────────────────────
 const surveyHeading = document.getElementById('surveyTitleHeading');
@@ -190,4 +265,5 @@ initSurveyNavigation({
 });
 
 // ─── Initial Load ──────────────────────────────────────────────────────────────
+initCsrfProtection();
 renderQuestions();

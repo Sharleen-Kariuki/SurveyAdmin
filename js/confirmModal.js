@@ -1,5 +1,6 @@
 // Manages the delete confirmation dialog independently.
 import { deleteSurveyById } from './storage.js';
+import { getCsrfToken } from './utils.js';
 
 const dialog = document.getElementById('confirmDeleteDialog');
 const label = document.getElementById('deleteSurveyName');
@@ -25,7 +26,7 @@ export function openDeleteModal(survey, onSuccess) {
 
 confirmBtn.addEventListener('click', () => {
   if (currentDeleteId) {
-    deleteSurveyById(currentDeleteId);
+    deleteSurveyById(currentDeleteId, getCsrfToken());
     dialog.close();
     if (currentSuccessCallback) currentSuccessCallback();
   }

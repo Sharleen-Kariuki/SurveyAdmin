@@ -32,8 +32,14 @@ function syncSurveyDropdowns(allSurveys, currentId) {
     .map((s, idx) => `<option value="${escapeHtml(s.id)}" ${String(s.id) === String(currentId) ? 'selected' : ''}>${idx + 1}. ${escapeHtml(s.title)}</option>`)
     .join('');
 
-  if (pageSurveySelect) pageSurveySelect.innerHTML = optionsHtml;
-  if (previewSurveySelect) previewSurveySelect.innerHTML = optionsHtml;
+  if (pageSurveySelect) {
+    pageSurveySelect.innerHTML = optionsHtml;
+    pageSurveySelect.value = String(currentId);
+  }
+  if (previewSurveySelect) {
+    previewSurveySelect.innerHTML = optionsHtml;
+    previewSurveySelect.value = String(currentId);
+  }
 }
 
 export function updateSurveyPaginationUI(allSurveys, currentIndex) {
@@ -69,12 +75,17 @@ export function switchSurveyByIndex(targetIndex) {
   const allSurveys = getSurveys();
   if (targetIndex < 0 || targetIndex >= allSurveys.length) return;
 
-  const targetSurveyId = allSurveys[targetIndex].id;
+  const targetSurveyId = String(allSurveys[targetIndex].id);
 
-  // Update browser URL query parameter without full reload
-  const newUrl = new URL(window.location.href);
-  newUrl.searchParams.set('id', targetSurveyId);
-  window.history.replaceState({ surveyId: targetSurveyId }, '', newUrl.toString());
+  // Sync to sessionStorage and update browser URL query parameter without full reload
+  try {
+    sessionStorage.setItem('current_survey_id', targetSurveyId);
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('id', targetSurveyId);
+    window.history.replaceState({ surveyId: targetSurveyId }, '', newUrl.toString());
+  } catch (err) {
+    console.warn('[surveyNavigation.js] Failed syncing URL/sessionStorage:', err);
+  }
 
   if (onSurveyChangeCallback) {
     onSurveyChangeCallback(targetSurveyId);

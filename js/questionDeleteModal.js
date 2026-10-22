@@ -1,6 +1,6 @@
 // Manages the Question Deletion confirmation dialog
 import { deleteQuestion } from './storage.js';
-import { setupDialogClose } from './utils.js';
+import { setupDialogClose, getCsrfToken } from './utils.js';
 
 const dialog = document.getElementById('deleteQuestionDialog');
 const confirmDeleteBtn = document.getElementById('confirmDeleteQuestionBtn');
@@ -16,7 +16,7 @@ if (dialog) {
 if (confirmDeleteBtn) {
   confirmDeleteBtn.addEventListener('click', () => {
     if (activeSurveyId && activeQuestionId) {
-      deleteQuestion(activeSurveyId, activeQuestionId);
+      deleteQuestion(activeSurveyId, activeQuestionId, getCsrfToken());
       activeQuestionId = null;
       dialog.close();
       if (onDeleteCallback) onDeleteCallback();

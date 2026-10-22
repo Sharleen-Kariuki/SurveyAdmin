@@ -1,7 +1,7 @@
-import { getSurveys } from './storage.js';
+import { getSurveys, resetToMockData } from './storage.js';
 import { openFormModal, setupFormSubmit } from './formModal.js';
 import { openDeleteModal } from './confirmModal.js';
-import { escapeHtml } from './utils.js';
+import { escapeHtml, initCsrfProtection } from './utils.js';
 import { initSurveyDataTable, destroySurveyDataTable } from './Datatable.js';
 
 // DOM Elements
@@ -19,25 +19,26 @@ function renderTable() {
   if (allSurveys.length > 0) {
     allSurveys.forEach((survey) => {
       const tr = document.createElement('tr');
-      tr.dataset.id = survey.id;
+      const safeId = String(survey.id);
+      tr.dataset.id = safeId;
 
       const statusClass = {
-        Active:   'status-active',
+        Active: 'status-active',
         Inactive: 'status-inactive',
-        Pending:  'status-pending',
+        Pending: 'status-pending',
       }[survey.status] || '';
 
       tr.innerHTML = `
         <th scope="row">
-          <a href="questions.html?id=${encodeURIComponent(survey.id)}" class="survey-link" aria-label="${escapeHtml(survey.title)} - View questions">
+          <a href="questions.html?id=${encodeURIComponent(safeId)}" class="survey-link" data-id="${escapeHtml(safeId)}" aria-label="${escapeHtml(survey.title)} - View questions">
             ${escapeHtml(survey.title)}
           </a>
         </th>
         <td>${escapeHtml(survey.description)}</td>
         <td>${Number(survey.responses || 0)}</td>
         <td><span class="status-badge ${statusClass}">${escapeHtml(survey.status)}</span></td>
-        <td>${escapeHtml(survey.createdAt)}</td>
-        <td>${escapeHtml(survey.updatedAt)}</td>
+        <td data-type="date">${escapeHtml(survey.createdAt)}</td>
+        <td data-type="date">${escapeHtml(survey.updatedAt)}</td>
         <td class="text-right">
           <div class="row-actions">
             <button type="button" class="btn-action btn-edit" aria-label="Edit ${escapeHtml(survey.title)}">Edit</button>
@@ -57,20 +58,47 @@ function renderTable() {
 createBtn.addEventListener('click', () => openFormModal(null));
 setupFormSubmit(renderTable);
 
+// Handle row clicks & navigation accurately
 tableBody.addEventListener('click', (e) => {
   const row = e.target.closest('tr');
-  if (!row || !row.dataset.id) return;
+  if (!row) return;
 
-  const surveyId = row.dataset.id;
+  const titleLink = e.target.closest('a.survey-link');
+  const rowLink = row.querySelector('a.survey-link');
+  const surveyId = titleLink?.dataset.id || row.dataset.id || rowLink?.dataset.id;
+  if (!surveyId) return;
+
   const survey = getSurveys().find((s) => String(s.id) === String(surveyId));
-  if (!survey) return;
 
   if (e.target.closest('.btn-edit')) {
-    openFormModal(survey);
-  } else if (e.target.closest('.btn-delete')) {
-    openDeleteModal(survey, renderTable);
-  } else if (!e.target.closest('a')) {
-    window.location.href = `questions.html?id=${encodeURIComponent(survey.id)}`;
+    e.preventDefault();
+    if (survey) openFormModal(survey);
+    return;
+  }
+
+  if (e.target.closest('.btn-delete')) {
+    e.preventDefault();
+    if (survey) openDeleteModal(survey, renderTable);
+    return;
+  }
+
+  // Store in sessionStorage so questions.html can always read the selected survey reliably
+  try {
+    sessionStorage.setItem('current_survey_id', String(surveyId));
+  } catch (err) {
+    console.warn('[app.js] Failed storing current_survey_id:', err);
+  }
+
+  // If clicked on title link directly
+  if (titleLink) {
+    e.preventDefault();
+    window.location.href = `questions.html?id=${encodeURIComponent(surveyId)}`;
+    return;
+  }
+
+  // If clicked anywhere else on the row (except action buttons)
+  if (!e.target.closest('button')) {
+    window.location.href = `questions.html?id=${encodeURIComponent(surveyId)}`;
   }
 });
 
@@ -81,4 +109,5 @@ if (urlParams.get('action') === 'create') {
 }
 
 // Initial boot
+initCsrfProtection();
 renderTable();

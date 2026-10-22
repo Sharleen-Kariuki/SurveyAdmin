@@ -1,0 +1,14 @@
+{
+  "name": "survey-admin",
+  "version": "1.0.0",
+  "description": "Admin Survey Management System with Faker.js data generator",
+  "scripts": {
+    "seed": "node scripts/generateData.js",
+    "seed:50": "node scripts/generateData.js --count=50",
+    "seed:large": "node scripts/generateData.js --count=100",
+    "seed:100": "node scripts/generateData.js --count=100 --questions=10"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^9.9.0"
+  }
+}
