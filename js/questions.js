@@ -16,6 +16,7 @@ import {
   initQuestionsDataTable,
   destroyQuestionsDataTable
 } from './Datatable.js';
+import { renderToolbarTabs, QUESTION_TOOLBAR_CONFIG } from './toolbarTabs.js';
 
 // ─── Extract Survey ID (URL Search, Hash, Regex, or Session Storage Fallback) ───
 function extractSurveyId() {
@@ -265,5 +266,6 @@ initSurveyNavigation({
 });
 
 // ─── Initial Load ──────────────────────────────────────────────────────────────
+renderToolbarTabs('#toolbarTabs', QUESTION_TOOLBAR_CONFIG);
 initCsrfProtection();
 renderQuestions();

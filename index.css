@@ -690,13 +690,21 @@ tbody tr:hover mark.dt-highlight {
 .toolbar-tabs {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  gap: 12px;
   flex-wrap: wrap;
   width: 100%;
   overflow: visible !important;
   position: relative;
   z-index: 50;
   padding-bottom: 2px;
+}
+
+.toolbar-tab-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .toolbar-dropdown-wrapper {
@@ -1256,6 +1264,78 @@ tbody tr:hover mark.dt-highlight {
 }
 
 /* Columns Visibility Dropdown */
+.columns-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.columns-search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.columns-search-input {
+  width: 100%;
+  padding: 7px 28px 7px 30px;
+  font-size: 12.5px;
+  font-family: inherit;
+  color: var(--text-main);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.columns-search-input:focus {
+  border-color: var(--border-focus, var(--primary));
+  box-shadow: 0 0 0 3px var(--focus-ring, hsla(330, 85%, 50%, 0.18));
+}
+
+.columns-search-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.85;
+}
+
+.btn-clear-column-search {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.12s, background-color 0.12s;
+}
+
+.btn-clear-column-search:hover {
+  color: var(--text-main);
+  background: var(--bg-subtle);
+}
+
+.columns-empty-message {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 14px 8px;
+  font-style: italic;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+
 .dropdown-hint {
   font-size: 11.5px;
   color: var(--text-muted);
@@ -1306,22 +1386,22 @@ tbody tr:hover mark.dt-highlight {
   cursor: not-allowed;
 }
 
-/* Right Toolbar: Page size selector positioned below tools on bottom right */
-.toolbar-right {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  width: 100%;
-  padding-top: 2px;
-}
-
+/* Bottom Section: Page size selector positioned next to DataTables info */
 .toolbar-length-control {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 12px;
   font-weight: 500;
   color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+div.dt-container div.dt-layout-cell.dt-layout-start {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .toolbar-select-sm {
@@ -1338,59 +1418,99 @@ tbody tr:hover mark.dt-highlight {
 /* Active Configurations & Filters Bar */
 .active-filters-bar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   flex-wrap: wrap;
   margin: 0 0 14px 0;
+  max-height: 84px;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 4px 2px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) rgba(0, 0, 0, 0.06);
   animation: fadeIn 0.15s ease-out;
+}
+
+/* Custom styled vertical scrollbar for active filters bar */
+.active-filters-bar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.active-filters-bar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-pill);
+}
+
+.active-filters-bar::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: var(--radius-pill);
+}
+
+.active-filters-bar::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-hover, var(--primary));
 }
 
 .active-config-pill,
 .active-filter-pill {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 4px 12px;
+  gap: 8px;
+  padding: 6px 14px;
   border-radius: var(--radius-pill);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 500;
-  line-height: 1.3;
+  line-height: 1.35;
   transition: all 0.15s ease;
   user-select: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  background: var(--primary);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  max-width: 100%;
+  min-width: 0;
 }
 
 .active-config-pill .pill-label,
 .active-filter-pill .pill-label {
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  font-size: 10px;
-  letter-spacing: 0.05em;
-  opacity: 0.85;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: #ffffff;
+  opacity: 0.95;
+  flex-shrink: 0;
 }
 
 .active-config-pill .pill-text,
 .active-filter-pill .pill-text {
   font-weight: 500;
+  color: #ffffff;
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .active-config-pill .pill-text strong,
 .active-filter-pill .pill-text strong {
   font-weight: 700;
+  color: #ffffff;
 }
 
 .active-config-pill .btn-clear-pill,
 .active-filter-pill .btn-clear-pill {
   background: transparent;
   border: none;
-  font-size: 16px;
+  font-size: 17px;
+  font-weight: 700;
   line-height: 1;
   cursor: pointer;
-  padding: 0 2px;
-  margin-left: 2px;
+  padding: 0 4px;
+  margin-left: 3px;
   border-radius: 50%;
-  opacity: 0.75;
-  transition: transform 0.12s ease, opacity 0.12s ease;
+  color: #ffffff;
+  opacity: 0.9;
+  flex-shrink: 0;
+  transition: transform 0.12s ease, opacity 0.12s ease, background-color 0.12s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1400,71 +1520,74 @@ tbody tr:hover mark.dt-highlight {
 .active-filter-pill .btn-clear-pill:hover {
   transform: scale(1.25);
   opacity: 1;
+  background: rgba(255, 255, 255, 0.25);
 }
 
-/* Distinct Pill Colors for Each Tab Type */
-/* 1. Search Pill (Violet accent) */
-.active-config-pill.pill-search {
-  background: hsla(270, 75%, 60%, 0.1);
-  border: 1px solid hsla(270, 75%, 60%, 0.35);
-  color: hsl(270, 75%, 45%);
-}
-.active-config-pill.pill-search .btn-clear-pill {
-  color: hsl(270, 75%, 45%);
-}
-
-/* 2. Filter Pill (Burgundy brand primary) */
+/* Distinct High-Contrast Pill Colors for Each Tab Type */
+/* 1. Filter Pill (Theme Primary Background with Crisp White text) */
 .active-config-pill.pill-filter,
 .active-filter-pill {
-  background: var(--primary-light, hsla(330, 100%, 65%, 0.12));
-  border: 1px solid var(--primary-border, hsl(330, 90%, 56%));
-  color: var(--primary, hsl(330, 100%, 29%));
+  background: var(--primary);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
 }
 .active-config-pill.pill-filter .btn-clear-pill,
 .active-filter-pill .btn-clear-pill {
-  color: var(--primary, hsl(330, 100%, 29%));
+  color: #ffffff;
 }
 
-/* 3. Sort Pill (Warm Amber/Bronze) */
+/* 2. Search Pill (Deep Indigo/Violet accent with White text) */
+.active-config-pill.pill-search {
+  background: hsl(270, 70%, 42%);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+.active-config-pill.pill-search .btn-clear-pill {
+  color: #ffffff;
+}
+
+/* 3. Sort Pill (Deep Amber/Bronze with White text) */
 .active-config-pill.pill-sort {
-  background: hsla(38, 92%, 50%, 0.12);
-  border: 1px solid hsla(38, 92%, 50%, 0.4);
-  color: hsl(35, 90%, 35%);
+  background: hsl(30, 85%, 38%);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
 }
 .active-config-pill.pill-sort .btn-clear-pill {
-  color: hsl(35, 90%, 35%);
+  color: #ffffff;
 }
 
-/* 4. Column Visibility Pill (Slate Gray) */
+/* 4. Column Visibility Pill (Deep Slate with White text) */
 .active-config-pill.pill-column {
-  background: hsla(215, 20%, 50%, 0.12);
-  border: 1px solid hsla(215, 20%, 50%, 0.35);
-  color: hsl(215, 25%, 35%);
+  background: hsl(215, 30%, 40%);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
 }
 .active-config-pill.pill-column .btn-clear-pill {
-  color: hsl(215, 25%, 35%);
+  color: #ffffff;
 }
 
 /* "Clear All" button */
 .btn-clear-all-configs,
 .btn-clear-all-filters {
-  background: transparent;
-  border: 1px dashed var(--border);
-  color: var(--text-muted);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-main);
   font-size: 11.5px;
   font-weight: 600;
-  padding: 4px 11px;
+  padding: 5px 13px;
   border-radius: var(--radius-pill);
   cursor: pointer;
   transition: all 0.12s ease;
   line-height: 1.2;
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
 }
 
 .btn-clear-all-configs:hover,
 .btn-clear-all-filters:hover {
   border-color: var(--danger, #ef4444);
-  color: var(--danger, #ef4444);
-  background: hsla(0, 84%, 60%, 0.08);
+  color: #ffffff;
+  background: var(--danger, #ef4444);
 }
 
 /* ═══════════════════════════════════════════════

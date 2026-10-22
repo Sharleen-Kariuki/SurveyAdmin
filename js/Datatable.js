@@ -12,6 +12,7 @@ import {
 import { createTableController } from './datatable/controller.js';
 import { applyHighlights, removeHighlights } from './datatable/highlight.js';
 import { escapeHtml } from './utils.js';
+import { renderToolbarTabs, SURVEY_TOOLBAR_CONFIG, QUESTION_TOOLBAR_CONFIG } from './toolbarTabs.js';
 
 // Re-export constants & utilities for backward compatibility
 export {
@@ -22,13 +23,17 @@ export {
   QUESTION_COLUMN_TYPES,
   applyHighlights,
   removeHighlights,
-  escapeHtml
+  escapeHtml,
+  renderToolbarTabs,
+  SURVEY_TOOLBAR_CONFIG,
+  QUESTION_TOOLBAR_CONFIG
 };
 
 // ─── Survey Table Controller (index.html) ────────────────────────────────────
 let surveyController = null;
 
 export function initSurveyDataTable(selector = '#surveyTable') {
+  renderToolbarTabs('#toolbarTabs', SURVEY_TOOLBAR_CONFIG);
   if (!surveyController) {
     surveyController = createTableController({
       tableId: 'surveyTable',
@@ -67,6 +72,7 @@ let questionsController = null;
 let currentQuestionsSurveyId = null;
 
 export function initQuestionsDataTable(surveyId, selector = '#questionsTable') {
+  renderToolbarTabs('#toolbarTabs', QUESTION_TOOLBAR_CONFIG);
   const safeSurveyId = surveyId || 'default';
 
   if (!questionsController || currentQuestionsSurveyId !== safeSurveyId) {

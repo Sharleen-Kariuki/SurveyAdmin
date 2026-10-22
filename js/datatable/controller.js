@@ -56,6 +56,11 @@ export function createTableController(opts) {
     destroy() {
       if (dtInstance) {
         removeHighlights(document.querySelector(selector));
+        const lengthControl = document.getElementById('tablePageLengthControl');
+        const tableEl = document.querySelector(selector);
+        if (lengthControl && tableEl) {
+          tableEl.after(lengthControl);
+        }
         dtInstance.destroy();
         dtInstance = null;
       }
@@ -73,6 +78,11 @@ export function createTableController(opts) {
 
       if (dtInstance) {
         removeHighlights(document.querySelector(selector));
+        const lengthControl = document.getElementById('tablePageLengthControl');
+        const tableEl = document.querySelector(selector);
+        if (lengthControl && tableEl) {
+          tableEl.after(lengthControl);
+        }
         dtInstance.destroy();
         dtInstance = null;
       }
@@ -105,6 +115,25 @@ export function createTableController(opts) {
           ...cfg,
           onRemove: getRemovalHandler(cfg.id)
         }));
+
+        if (currentFilterRules.length > 0) {
+          const filterDisplayParts = currentFilterRules.map((rule) => {
+            const colLabel = rule.col === 'all'
+              ? 'All Columns'
+              : (columnNames[rule.col] || `Column ${rule.col}`);
+            const relLabel = RELATION_LABELS[rule.relation] || rule.relation;
+            return `${escapeHtml(colLabel)} ${escapeHtml(relLabel)} "<strong>${escapeHtml(rule.value)}</strong>"`;
+          });
+
+          activeConfigs = activeConfigs.filter((cfg) => cfg.id !== 'filter' && !cfg.id.startsWith('filter_'));
+          activeConfigs.push({
+            id: 'filter',
+            type: 'filter',
+            label: 'Filter',
+            htmlDisplay: filterDisplayParts.join(' &rarr; '),
+            onRemove: resetFilters
+          });
+        }
       } else {
         const pageLengthSelect = document.getElementById('tablePageLengthSelect');
         if (pageLengthSelect) {
@@ -161,13 +190,29 @@ export function createTableController(opts) {
         layout: {
           topStart: null,
           topEnd: null,
-          bottomStart: 'info',
+          bottomStart: [
+            'info',
+            function () {
+              return document.getElementById('tablePageLengthControl');
+            }
+          ],
           bottomEnd: 'paging'
         },
         language,
         autoWidth: false,
         responsive: true
       });
+
+      function placeLengthControlAtBottom() {
+        const tableContainer = dtInstance?.table()?.container();
+        const layoutStart = tableContainer ? tableContainer.querySelector('.dt-layout-start') : document.querySelector('.dt-layout-start');
+        const lengthControl = document.getElementById('tablePageLengthControl');
+        if (layoutStart && lengthControl && !layoutStart.contains(lengthControl)) {
+          layoutStart.appendChild(lengthControl);
+        }
+      }
+
+      placeLengthControlAtBottom();
 
       // Apply hidden columns
       currentHiddenColumns.forEach((colIdx) => {
@@ -176,6 +221,7 @@ export function createTableController(opts) {
 
       // Re-apply targeted text highlighting on every table draw
       dtInstance.on('draw', () => {
+        placeLengthControlAtBottom();
         const tableEl = document.querySelector(selector);
         if (currentSearchRule && currentSearchRule.value) {
           applyHighlights(tableEl, currentSearchRule.value, currentSearchRule.col);
@@ -234,10 +280,7 @@ export function createTableController(opts) {
 
   function getRemovalHandler(id) {
     if (id === 'search') return resetInlineSearch;
-    if (id.startsWith('filter_')) {
-      const ruleId = id.replace('filter_', '');
-      return () => removeSingleFilterRule(ruleId);
-    }
+    if (id === 'filter' || id.startsWith('filter_')) return resetFilters;
     if (id === 'sort') return resetSorts;
     if (id.startsWith('col-')) {
       const colIdx = Number(id.replace('col-', ''));
@@ -337,7 +380,7 @@ export function createTableController(opts) {
     currentFilterRules = rules.filter((r) => r.value && String(r.value).trim() !== '');
 
     // Purge old filter pills
-    activeConfigs = activeConfigs.filter((cfg) => !cfg.id.startsWith('filter_'));
+    activeConfigs = activeConfigs.filter((cfg) => cfg.id !== 'filter' && !cfg.id.startsWith('filter_'));
 
     const filterBadge = document.getElementById('filterBadge');
     const filterIndicator = document.getElementById('filterIndicator');
@@ -349,23 +392,25 @@ export function createTableController(opts) {
       }
       if (filterIndicator) filterIndicator.hidden = false;
 
-      currentFilterRules.forEach((rule) => {
+      const filterDisplayParts = currentFilterRules.map((rule) => {
         const colLabel = rule.col === 'all'
           ? 'All Columns'
           : (columnNames[rule.col] || `Column ${rule.col}`);
         const relLabel = RELATION_LABELS[rule.relation] || rule.relation;
+        return `${escapeHtml(colLabel)} ${escapeHtml(relLabel)} "<strong>${escapeHtml(rule.value)}</strong>"`;
+      });
 
-        addOrUpdateConfig(`filter_${rule.id}`, {
-          id: `filter_${rule.id}`,
-          type: 'filter',
-          label: 'Filter',
-          htmlDisplay: `${escapeHtml(colLabel)} ${escapeHtml(relLabel)} "<strong>${escapeHtml(rule.value)}</strong>"`,
-          onRemove: () => removeSingleFilterRule(rule.id)
-        });
+      addOrUpdateConfig('filter', {
+        id: 'filter',
+        type: 'filter',
+        label: 'Filter',
+        htmlDisplay: filterDisplayParts.join(' &rarr; '),
+        onRemove: resetFilters
       });
     } else {
       if (filterBadge) filterBadge.hidden = true;
       if (filterIndicator) filterIndicator.hidden = true;
+      removeConfig('filter');
     }
 
     closeAllDropdowns();
@@ -378,7 +423,6 @@ export function createTableController(opts) {
 
   function removeSingleFilterRule(ruleId) {
     currentFilterRules = currentFilterRules.filter((r) => r.id !== ruleId);
-    removeConfig(`filter_${ruleId}`);
 
     const filterBadge = document.getElementById('filterBadge');
     const filterIndicator = document.getElementById('filterIndicator');
@@ -388,9 +432,26 @@ export function createTableController(opts) {
         filterBadge.hidden = false;
       }
       if (filterIndicator) filterIndicator.hidden = false;
+
+      const filterDisplayParts = currentFilterRules.map((rule) => {
+        const colLabel = rule.col === 'all'
+          ? 'All Columns'
+          : (columnNames[rule.col] || `Column ${rule.col}`);
+        const relLabel = RELATION_LABELS[rule.relation] || rule.relation;
+        return `${escapeHtml(colLabel)} ${escapeHtml(relLabel)} "<strong>${escapeHtml(rule.value)}</strong>"`;
+      });
+
+      addOrUpdateConfig('filter', {
+        id: 'filter',
+        type: 'filter',
+        label: 'Filter',
+        htmlDisplay: filterDisplayParts.join(' &rarr; '),
+        onRemove: resetFilters
+      });
     } else {
       if (filterBadge) filterBadge.hidden = true;
       if (filterIndicator) filterIndicator.hidden = true;
+      removeConfig('filter');
     }
 
     // Update panel DOM to remove that row
@@ -408,12 +469,15 @@ export function createTableController(opts) {
 
   function resetFilters() {
     currentFilterRules = [];
-    activeConfigs = activeConfigs.filter((cfg) => !cfg.id.startsWith('filter_'));
+    activeConfigs = activeConfigs.filter((cfg) => cfg.id !== 'filter' && !cfg.id.startsWith('filter_'));
 
     const filterBadge = document.getElementById('filterBadge');
     const filterIndicator = document.getElementById('filterIndicator');
     if (filterBadge) filterBadge.hidden = true;
     if (filterIndicator) filterIndicator.hidden = true;
+
+    clearAllValidationErrors(document.getElementById('filterRulesList'));
+    renderFilterRulesDom([], columnNames, columnTypes);
 
     closeAllDropdowns();
     renderPills();

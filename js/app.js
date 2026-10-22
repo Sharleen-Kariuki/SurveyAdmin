@@ -3,6 +3,7 @@ import { openFormModal, setupFormSubmit } from './formModal.js';
 import { openDeleteModal } from './confirmModal.js';
 import { escapeHtml, initCsrfProtection } from './utils.js';
 import { initSurveyDataTable, destroySurveyDataTable } from './Datatable.js';
+import { renderToolbarTabs, SURVEY_TOOLBAR_CONFIG } from './toolbarTabs.js';
 
 // DOM Elements
 const tableBody = document.getElementById('surveyTableBody');
@@ -109,5 +110,6 @@ if (urlParams.get('action') === 'create') {
 }
 
 // Initial boot
+renderToolbarTabs('#toolbarTabs', SURVEY_TOOLBAR_CONFIG);
 initCsrfProtection();
 renderTable();

@@ -29,6 +29,22 @@ export function closeAllDropdowns() {
       panel.style.right = '';
     }
   });
+
+  // Reset column search input on dropdown close
+  const colSearch = document.getElementById('columnSearchInput');
+  if (colSearch && colSearch.value) {
+    colSearch.value = '';
+    const btnClear = document.getElementById('btnClearColumnSearch');
+    if (btnClear) btnClear.hidden = true;
+    const columnsList = document.getElementById('columnsCheckboxList');
+    if (columnsList) {
+      columnsList.querySelectorAll('.col-checkbox-item').forEach((item) => {
+        item.style.display = '';
+      });
+    }
+    const emptyMsg = document.getElementById('columnsEmptyMessage');
+    if (emptyMsg) emptyMsg.hidden = true;
+  }
 }
 
 export function getPlaceholderForColumn(colType) {
@@ -1073,9 +1089,61 @@ export function bindToolbarEvents(actions) {
     });
   }
 
-  // 5. Columns Tab Controls
+  // 5. Columns Tab Controls (Search & Visibility)
   const columnsList = document.getElementById('columnsCheckboxList');
   const btnShowAllCols = document.getElementById('btnShowAllColumns');
+  const columnSearchInput = document.getElementById('columnSearchInput');
+  const btnClearColumnSearch = document.getElementById('btnClearColumnSearch');
+  const columnsEmptyMessage = document.getElementById('columnsEmptyMessage');
+
+  function filterColumnsList(query) {
+    const q = String(query || '').trim().toLowerCase();
+    if (btnClearColumnSearch) {
+      btnClearColumnSearch.hidden = !q;
+    }
+
+    if (!columnsList) return;
+    const items = columnsList.querySelectorAll('.col-checkbox-item');
+    let visibleCount = 0;
+
+    items.forEach((item) => {
+      const labelText = item.querySelector('span')?.textContent || '';
+      const matches = !q || labelText.toLowerCase().includes(q);
+      item.style.display = matches ? '' : 'none';
+      if (matches) visibleCount++;
+    });
+
+    if (columnsEmptyMessage) {
+      columnsEmptyMessage.hidden = visibleCount > 0;
+    }
+  }
+
+  if (columnSearchInput) {
+    columnSearchInput.addEventListener('input', () => {
+      filterColumnsList(columnSearchInput.value);
+    });
+
+    columnSearchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (columnSearchInput.value) {
+          e.stopPropagation();
+          columnSearchInput.value = '';
+          filterColumnsList('');
+        }
+      }
+    });
+  }
+
+  if (btnClearColumnSearch) {
+    btnClearColumnSearch.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (columnSearchInput) {
+        columnSearchInput.value = '';
+        columnSearchInput.focus();
+      }
+      filterColumnsList('');
+    });
+  }
 
   if (columnsList) {
     columnsList.addEventListener('change', (e) => {
@@ -1101,6 +1169,10 @@ export function bindToolbarEvents(actions) {
 
   if (btnShowAllCols) {
     btnShowAllCols.addEventListener('click', () => {
+      if (columnSearchInput) {
+        columnSearchInput.value = '';
+        filterColumnsList('');
+      }
       onShowAllColumns();
       updateColumnCheckboxDisabledState();
     });
